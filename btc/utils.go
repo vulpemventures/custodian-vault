@@ -14,22 +14,10 @@ func createWallet(network string) (*wallet, error) {
 		return nil, err
 	}
 
-	var net *chaincfg.Params
-	switch network {
-	case "mainnet":
-		net = &chaincfg.MainNetParams
-	case "testnet":
-		net = &chaincfg.TestNet3Params
-	default:
-			return nil, errors.New("Invalid network")
-	}
-
-	// generate master key 
-	masterKey, err := hdkeychain.NewMaster(seed, net)
 	hkStart := uint32(0x80000000)
 	wallet := &wallet{
+		Seed: seed,
 		Network: network,
-		MasterKey: masterKey.String(),
 		DerivationPath: []uint32{hkStart + 44, hkStart, hkStart}, // hardcoded m/44'/0'/0'
 	}
 
@@ -61,8 +49,13 @@ func derivePubKey(key *hdkeychain.ExtendedKey) (*hdkeychain.ExtendedKey, error) 
 }
 
 func deriveAddress(w *wallet, childnum uint32) (*address, error) {
+	net, err := getNetworkFromString(w.Network)
+	if err != nil {
+		return nil, err
+	}
+
 	// get path master key
-	key, err := hdkeychain.NewKeyFromString(w.MasterKey)
+	key, err := hdkeychain.NewMaster(w.Seed, net)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +68,6 @@ func deriveAddress(w *wallet, childnum uint32) (*address, error) {
 	}
 
 	// generate new address for derived key
-	net := getNetworkFromString(w.Network)
 	addr, err := key.Address(net)
 	if err != nil {
 		return nil, err
@@ -87,10 +79,13 @@ func deriveAddress(w *wallet, childnum uint32) (*address, error) {
 	}, nil
 }
 
-func getNetworkFromString(network string) (*chaincfg.Params) {
-	if network == "testnet" {
-		return &chaincfg.TestNet3Params
+func getNetworkFromString(network string) (*chaincfg.Params, error) {
+	switch network {
+	case "mainnet":
+		return &chaincfg.MainNetParams, nil
+	case "testnet":
+		return &chaincfg.TestNet3Params, nil
+	default:
+			return nil, errors.New("Invalid network")
 	}
-
-	return &chaincfg.MainNetParams
 }

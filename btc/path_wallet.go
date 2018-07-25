@@ -10,8 +10,8 @@ import(
 )
 
 type wallet struct {
+	Seed []byte
 	Network string
-	MasterKey string
 	DerivationPath []uint32
 }
 
@@ -88,7 +88,12 @@ func (b *backend) pathWalletRead(ctx context.Context, req *logical.Request, d *f
 		return nil, nil
 	}
 
-	key, err := hdkeychain.NewKeyFromString(w.MasterKey)
+	net, err := getNetworkFromString(w.Network)
+	if err != nil {
+		return nil, err
+	}
+	
+	key, err := hdkeychain.NewMaster(w.Seed, net)
 	if err != nil {
 		return nil, err
 	}
