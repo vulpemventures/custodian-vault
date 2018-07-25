@@ -54,7 +54,7 @@ func (b *backend) pathAddressWrite(ctx context.Context, req *logical.Request, d 
 		return nil, err
 	}
 	if token == nil {
-		return logical.ErrorResponse("token not found"), nil
+		return nil, errors.New("token not found")
 	}
 
 	walletName := token.WalletName
@@ -83,7 +83,7 @@ func (b *backend) pathAddressWrite(ctx context.Context, req *logical.Request, d 
 		return nil, err
 	}
 
-	// override the storage, is this ok to do in a read operation?
+	// override the storage with new generated address
 	entry, err := logical.StorageEntryJSON("address/" +  walletName, a)
 	if err != nil {
 		return nil, err

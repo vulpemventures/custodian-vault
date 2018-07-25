@@ -44,7 +44,7 @@ func (b *backend) pathCredsRead(ctx context.Context, req *logical.Request, d *fr
 		return nil, err
 	}
 	if w == nil {
-		return logical.ErrorResponse("Failed to create credentials for '" + walletName + "': wallet does not exist"), nil
+		return nil, errors.New("Failed to create credentials for '" + walletName + "': wallet does not exist")
 	}
 
 	cred := &credential{

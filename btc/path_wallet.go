@@ -55,7 +55,7 @@ func (b *backend) pathWalletWrite(ctx context.Context, req *logical.Request, d *
 		return nil, err
 	}
 	if w != nil {
-		return logical.ErrorResponse("Wallet with name '" + walletName + "' already exists"), nil
+		return nil, errors.New("Wallet with name '" + walletName + "' already exists")
 	}
 
 	wallet, err := createWallet(network)
