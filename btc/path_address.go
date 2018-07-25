@@ -6,7 +6,6 @@ import(
 
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
-	"github.com/hashicorp/vault/helper/salt"
 )
 
 type address struct {
@@ -42,14 +41,7 @@ func (b *backend) pathAddressWrite(ctx context.Context, req *logical.Request, d 
 		return nil, errors.New("missing auth token")
 	}
 
-	s, err := salt.NewSalt(ctx, req.Storage, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	saltedToken := s.SaltID(t)
-
-	token, err := b.GetToken(ctx, req.Storage, saltedToken)
+	token, err := b.GetToken(ctx, req.Storage, t)
 	if err != nil {
 		return nil, err
 	}

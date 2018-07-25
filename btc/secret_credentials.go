@@ -21,6 +21,7 @@ func secretCredentials(b *backend) *framework.Secret {
 				Description: "Access token for wallets",
 			},
 		},
+		DefaultDuration: time.Duration(1 * time.Hour),
 		Renew:  b.secretCredsRenew,
 		Revoke: b.secretCredsRevoke,
 	}
@@ -30,7 +31,7 @@ func (b *backend) secretCredsRenew(ctx context.Context, req *logical.Request, d 
 	resp := &logical.Response{Secret: req.Secret}
 
 	resp.Secret.TTL = time.Duration(1 * time.Hour)
-	resp.Secret.MaxTTL = time.Duration(1 * time.Hour)
+	resp.Secret.MaxTTL = time.Duration(2 * time.Hour)
 	return resp, nil
 }
 

@@ -3,7 +3,7 @@ package btc
 import(
 	"context"
 	"errors"
-	"time"
+	// "time"
 
 	uuid "github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/vault/helper/salt"
@@ -61,9 +61,6 @@ func (b *backend) pathCredsRead(ctx context.Context, req *logical.Request, d *fr
 		map[string]interface{}{"token": token},
 	)
 
-	resp.Secret.TTL = time.Duration(1 * time.Hour)
-	resp.Secret.MaxTTL = time.Duration(1 * time.Hour)
-
 	return resp, nil
 }
 
@@ -100,7 +97,14 @@ func (b *backend) NewToken(ctx context.Context, store logical.Storage, cred *cre
 }
 
 func (b *backend) GetToken(ctx context.Context, s logical.Storage, token string) (*credential, error) {
-	entry, err := s.Get(ctx, "creds/" + token)
+	newSalt, err := salt.NewSalt(ctx, s, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	saltedToken := newSalt.SaltID(token)
+	
+	entry, err := s.Get(ctx, "creds/" + saltedToken)
 	if err != nil {
 		return nil, err
 	}
