@@ -15,8 +15,8 @@ Clone project
 git clone https://github.com/vulpemventures/custodian-vault.git && cd custodian-vault
 ```
 
-Run `./go_installer.sh` to install Go. It will be installed at `/usr/local/go`.  
-Run `./vault_installer.sh` to instal Vault. it will be installed at `$HOME/vault`.
+Run `./scripts/go_installer.sh` to install Go. It will be installed at `/usr/local/go`.  
+Run `./script/svault_installer.sh` to instal Vault. it will be installed at `$HOME/vault`.
 
 Delete these folders to uninstall the packages.  
 
@@ -64,10 +64,10 @@ Start the vault server in dev mode passing the config file
 vault server -dev -dev-root-token-id="root" -config=$HOME/tmp/vault.hcl
 ```
 
-Open another tab, always in the repo directory, make the plugin installer script executable and launch it
+Open another shell tab and install the plugin
 
 ```sh
-./plugin_installer.sh
+./scripts/plugin_installer.sh
 ```
 
 ## Usage
