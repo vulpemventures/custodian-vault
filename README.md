@@ -1,28 +1,52 @@
 # custodian-vault
 
-Store securely Bitcoin and Ethereum hot wallet using Vault
+Store Bitcoin and Ethereum hot wallet securely using Vault.
+
+## Prerequisites
+
+* [Golang](https://golang.org/)
+* [Vault](https://www.vaultproject.io/)
+
+If you have already installed them you can skip this part.
+
+Clone project
+
+```sh
+git clone https://github.com/vulpemventures/custodian-vault.git && cd custodian-vault
+```
+
+Run `./go_installer.sh` to install Go. It will be installed at `/usr/local/go`.  
+Run `./vault_installer.sh` to instal Vault. it will be installed at `$HOME/vault`.
+
+Delete these folders to uninstall the packages.  
 
 ## Install plugin
 
-Move to your go workspace directory and create a path for the project
+Create a path for the project in your go workspace
 
 ```sh
-cd $GOPATH/src
-mkdir -p  github.com/vulpemventures
-cd github.com/vulpemventures/
+mkdir -p  $GOPATH/src/github.com/vulpemventures
 ```
 
-Clone the project
+Clone the project to the just created directory
 
 ```sh
-cd $GOPATH/src/github.com/vulpemventures/
-git clone git@github.com:vulpemventures/custodian-vault.git
+git clone https://github.com/vulpemventures/custodian-vault.git $GOPATH/src/github.com/vulpemventures/custodian-vault
+```
+
+Or move project folder if you already cloned the repo
+
+```sh
+mv ../custodian-vault $GOPATH/src/github.com/vulpemventures
 ```
 
 Create a directory where to save the binary of the project
 
 ```sh
 mkdir -p ~/tmp/vault-plugins
+
+cd $GOPATH/src/github.com/vulpemventures/custodian-vault
+go get .
 go build -o ~/tmp/vault-plugins/custodian-vault
 ```
 
@@ -43,8 +67,7 @@ vault server -dev -dev-root-token-id="root" -config=$HOME/tmp/vault.hcl
 Open another tab, always in the repo directory, make the plugin installer script executable and launch it
 
 ```sh
-chmod u+x install_plugin.sh
-./install_plugin.sh
+./plugin_installer.sh
 ```
 
 ## Usage
@@ -66,7 +89,7 @@ Generate an auth token for wallet
 ```sh
 vault read custodian/creds/test
 # Expected output
-# lease_id           custodian/creds/test/<salted_auth_token>
+# lease_id           custodian/creds/test/<lease_id>
 # lease_duration     1h
 # lease_renewable    true
 # token              <auth_token>
@@ -75,7 +98,7 @@ vault read custodian/creds/test
 Generate a new address passing the new generated token
 
 ```sh
-vault read custodian/address/test token=<auth_token>
+vault write custodian/address/test token=<auth_token>
 ```
 
 To renew or revoke auth token
