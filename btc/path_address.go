@@ -96,7 +96,6 @@ func (b *backend) pathAddressWrite(ctx context.Context, req *logical.Request, d 
 	return &logical.Response{
 		Data: map[string]interface{}{
 			"address": a.LastAddress,
-			"childnum": a.Childnum,
 		},
 	}, nil
 }

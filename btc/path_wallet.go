@@ -106,8 +106,6 @@ func (b *backend) pathWalletRead(ctx context.Context, req *logical.Request, d *f
 	return &logical.Response{
 		Data: map[string]interface{}{
 			"network": w.Network,
-			"masterKey": w.MasterKey,
-			"xprv": xprv.String(),
 			"xpub": xpub.String(),
 		},
 	}, nil
