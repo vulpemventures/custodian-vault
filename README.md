@@ -7,9 +7,9 @@ Store Bitcoin and Ethereum hot wallet securely using Vault.
 * [Golang](https://golang.org/)
 * [Vault](https://www.vaultproject.io/)
 
-If you have already installed them you can skip this part.
+If you have already installed them skip this step.
 
-Clone project
+Clone the project
 
 ```sh
 git clone https://github.com/vulpemventures/custodian-vault.git && cd custodian-vault
@@ -22,13 +22,13 @@ Delete these folders to uninstall the packages.
 
 ## Install plugin
 
-Create a path for the project in your go workspace
+Create the path for the project in your go workspace `GOPATH`
 
 ```sh
 mkdir -p  $GOPATH/src/github.com/vulpemventures
 ```
 
-Clone the project to the just created directory
+Clone the project in the directory
 
 ```sh
 git clone https://github.com/vulpemventures/custodian-vault.git $GOPATH/src/github.com/vulpemventures/custodian-vault
@@ -40,7 +40,7 @@ Or move project folder if you already cloned the repo
 mv ../custodian-vault $GOPATH/src/github.com/vulpemventures
 ```
 
-Create a directory where to save the binary of the project
+Create the directory where to save the binary of the project
 
 ```sh
 mkdir -p ~/tmp/vault-plugins
@@ -50,7 +50,7 @@ go get .
 go build -o ~/tmp/vault-plugins/custodian-vault
 ```
 
-Create a config file to point Vault at the plugin directory
+Create the config file to point the Vault server to the plugin directory
 
 ```sh
 tee ~/tmp/vault.hcl <<EOF
@@ -58,13 +58,13 @@ plugin_directory = "$HOME/tmp/vault-plugins"
 EOF
 ```
 
-Start the vault server in dev mode passing the config file
+Start Vault server in `dev` mode passing the config file
 
 ```sh
 vault server -dev -dev-root-token-id="root" -config=$HOME/tmp/vault.hcl
 ```
 
-Open another shell tab and install the plugin
+Open another tab in the terminal and install the custodian plugin
 
 ```sh
 ./scripts/plugin_installer.sh
@@ -78,44 +78,38 @@ Create a wallet
 vault write custodian/wallet/test network=testnet
 ```
 
-Read wallet info
+Get wallet extended public key (this is planned to be executed passing `auth_token`)
 
 ```sh
 vault read custodian/wallet/test
 ```
 
-Generate an auth token for wallet
+Generate an `auth_token` for wallet
 
 ```sh
 vault read custodian/creds/test
 # Expected output
-# lease_id           custodian/creds/test/<lease_id>
+# lease_id           <lease_id>
 # lease_duration     1h
 # lease_renewable    true
 # token              <auth_token>
 ```
 
-Generate a new address passing the new generated token
+Get a receiving address passing the new generated token
 
 ```sh
 vault write custodian/address/test token=<auth_token>
 ```
 
-To renew or revoke auth token
+Renew or revoke `auth_token`
 
 ```sh
 vault lease renew|revoke <lease_id>
 ```
 
-To disable plugin run
-
-```sh
-vault secrets disable custodian
-```
-
 ## Troubleshooting
 
-If get "server gave HTTP response to HTTPS client" error
+If you get a `server gave HTTP response to HTTPS client` error
 
 ```sh
 export VAULT_ADDR='http://127.0.0.1:8200'
