@@ -1,6 +1,6 @@
 # custodian-vault
 
-Store Bitcoin and Ethereum hot wallet securely using Vault.
+Store Bitcoin and Ethereum securely using Vault.
 
 ## Prerequisites
 
@@ -16,7 +16,7 @@ git clone https://github.com/vulpemventures/custodian-vault.git && cd custodian-
 ```
 
 Run `./scripts/go_installer.sh` to install Go. It will be installed at `/usr/local/go`.  
-Run `./scripts/vault_installer.sh` to install Vault. it will be installed at `$HOME/vault`.
+Run `./scripts/vault_installer.sh` to install Vault. It will be installed at `$HOME/vault`.
 
 Delete these folders to uninstall the packages.  
 
