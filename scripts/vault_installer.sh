@@ -21,6 +21,10 @@ case "$ARCH" in
 esac
 TARGET=$TARGET".zip"
 
+echo "Installing unzip.."
+sudo apt-get update
+sudo apt-get install unzip
+
 echo "Downloading archive.."
 wget https://releases.hashicorp.com/vault/0.10.3/$TARGET
 
