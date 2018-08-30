@@ -2,15 +2,14 @@ package btc
 
 import (
 	"context"
-	"time"
 	"errors"
+	"time"
 
+	uuid "github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/vault/helper/salt"
 	"github.com/hashicorp/vault/logical"
 	"github.com/hashicorp/vault/logical/framework"
 )
-
-const SecretCredsType = "creds"
 
 func secretCredentials(b *backend) *framework.Secret {
 	return &framework.Secret{
@@ -21,24 +20,15 @@ func secretCredentials(b *backend) *framework.Secret {
 				Description: "Access token for wallets",
 			},
 		},
-		DefaultDuration: time.Duration(1 * time.Hour),
-		Renew:  b.secretCredsRenew,
-		Revoke: b.secretCredsRevoke,
+		DefaultDuration: time.Duration(5 * time.Minute),
+		Revoke:          b.secretCredsRevoke,
 	}
-}
-
-func (b *backend) secretCredsRenew(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
-	resp := &logical.Response{Secret: req.Secret}
-
-	resp.Secret.TTL = time.Duration(1 * time.Hour)
-	resp.Secret.MaxTTL = time.Duration(2 * time.Hour)
-	return resp, nil
 }
 
 func (b *backend) secretCredsRevoke(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
 	id, ok := req.Secret.InternalData["token"].(string)
 	if !ok {
-		return nil, errors.New("secret is missing internal data")
+		return nil, errors.New(MissingInternalDataError)
 	}
 
 	s, err := salt.NewSalt(ctx, req.Storage, nil)
@@ -46,10 +36,76 @@ func (b *backend) secretCredsRevoke(ctx context.Context, req *logical.Request, d
 		return nil, err
 	}
 
-	err = req.Storage.Delete(ctx, "creds/" + s.SaltID(id))
+	err = req.Storage.Delete(ctx, PathCreds+s.SaltID(id))
 	if err != nil {
 		return nil, err
 	}
 
 	return nil, nil
+}
+
+func newToken(ctx context.Context, s logical.Storage, config *salt.Config) (string, string, error) {
+	token, err := uuid.GenerateUUID()
+	if err != nil {
+		return "", "", err
+	}
+
+	newSalt, err := salt.NewSalt(ctx, s, config)
+	if err != nil {
+		return "", "", err
+	}
+
+	return token, newSalt.SaltID(token), nil
+}
+
+func (b *backend) GetToken(ctx context.Context, s logical.Storage, token string, multisig bool) (*credential, error) {
+	newSalt, err := salt.NewSalt(ctx, s, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	leaseID := newSalt.SaltID(token)
+
+	path := PathCreds
+	if multisig {
+		path = PathMultiSigCreds
+	}
+	path = path + leaseID
+
+	entry, err := s.Get(ctx, path)
+	if err != nil {
+		return nil, err
+	}
+	if entry == nil {
+		return nil, nil
+	}
+
+	var cred credential
+	if err := entry.DecodeJSON(&cred); err != nil {
+		return nil, err
+	}
+
+	return &cred, nil
+}
+
+func (b *backend) RevokeToken(ctx context.Context, store logical.Storage, token *credential, multisig bool) error {
+	secretType := SecretCredsType
+	if multisig {
+		secretType = MultiSigSecretCredsType
+	}
+	secret := b.Secret(secretType)
+	request := &logical.Request{
+		Storage:   store,
+		Operation: logical.RevokeOperation,
+		Secret: &logical.Secret{
+			InternalData: map[string]interface{}{"token": token.Token},
+			LeaseID:      token.LeaseID,
+		},
+	}
+	_, err := secret.HandleRevoke(ctx, request)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

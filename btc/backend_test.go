@@ -1,13 +1,13 @@
 package btc
 
 import (
-	"testing"
 	"context"
+	"testing"
 
 	"github.com/hashicorp/vault/logical"
 )
 
-func getTestBackend(t * testing.T) (logical.Backend, logical.Storage) {
+func getTestBackend(t *testing.T) (logical.Backend, logical.Storage) {
 	storage := &logical.InmemStorage{}
 
 	config := logical.TestBackendConfig()

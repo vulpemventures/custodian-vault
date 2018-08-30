@@ -7,13 +7,13 @@ import (
 	"github.com/hashicorp/vault/logical"
 )
 
-func TestCredentials(t *testing.T) {
+func TestMultiSigCredentials(t *testing.T) {
 	b, storage := getTestBackend(t)
 
-	exp := "Failed to create credentials for 'wallet1': wallet does not exist"
+	exp := "Failed to create credentials for 'multisig_wallet1': wallet does not exist"
 	_, err := b.HandleRequest(context.Background(), &logical.Request{
 		Storage:   storage,
-		Path:      "creds/wallet1",
+		Path:      "creds/multisig/wallet1",
 		Operation: logical.ReadOperation,
 	})
 	if err == nil {
