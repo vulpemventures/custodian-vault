@@ -81,8 +81,9 @@ vault read custodian/wallet/<name>
 ```
 
 It returns a response object that contains:
-* `network`
-* extended public key at path `m/44'/0'/0'/0`, that is the master key from which all receiving address are generated (see [BIP-0032](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) for more details).
+
+* `network` either bitcoin main net or test net
+* extended public key at path `m/44'/0'/0'/0` for main net, that is the master key from which all receiving address are generated (see [BIP-0032](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) for more details).
 
 ### Create multisig wallet
 
@@ -90,7 +91,7 @@ It returns a response object that contains:
 vault write custodian/wallet/multisig/<name> m=<number> n=<number> pubkeys=<list,of,pubkeys> network=<testnet|mainnet>
 ```
 
-This creates a new key used in an `m` of `n` multisg wallet. It requires a list of `n-1` comma separated public keys that are used to create the `redeem script`. This will be subject of breaking changes, since it's planned to add support for [BIP-0045](https://github.com/bitcoin/bips/blob/master/bip-0045.mediawiki)
+This creates a new key used in an `m` of `n` multisg wallet. It requires a list of `n-1` comma separated public keys that are used to create the `redeem script`. This will be subject of breaking changes, since it's planned to add support for [BIP-0045](https://github.com/bitcoin/bips/blob/master/bip-0045.mediawiki).
 
 To get the `redeem script` along with the other info:
 
@@ -104,18 +105,19 @@ vault read custodian/wallet/multisig/<name>
 vault read custodian/creds/<wallet_name>
 # Expected output
 # lease_id           <lease_id>
-# lease_duration     1h
-# lease_renewable    true
+# lease_duration     5m
+# lease_renewable    false
 # token              <auth_token>
 ```
 
-This creates an `auth_token` to allow the end user to interact with the created wallet. At the moment only generating a new receiving address requires a token to be passed in the request. Access tokens for generating signatures are coming soon.
+This creates an `auth_token` to allow the end user to interact with the created wallet. Operations like generating a new receiving address or creating a signature for a raw transaction require a token to be passed in the request.
 
-NOTICE: It is planned that this tokens expire right after a request is satisfied, but at the moment they're invalidated by default after 1 hour.  
-To renew or revoke an `auth_token`:
+NOTICE: Auth tokens expire right after a request is satisfied and have a default Time To Live of 5 minutes.
+
+To manually revoke an `auth_token`:
 
 ```sh
-vault lease renew|revoke <lease_id>
+vault lease revoke <lease_id>
 ```
 
 ### Generate an `auth_token` for a multisig wallet
@@ -131,7 +133,7 @@ vault read custodian/creds/multisig/<wallet_name>
 vault write custodian/address/<wallet_name> token=<auth_token>
 ```
 
-This derives new addresses from public keys at path `m/44'/0'/0'/0/<childnum>` starting from `0`.
+This derives new addresses from public keys at path `m/44'/0'/0'/0/<childnum>` for main net (`m/44'/1'/0'/0/<childnum>` for test net) starting from `childnum = 0`.
 You need to pass a valid `auth_token` to get a new address or the request will fail.
 
 ### Get receiving address for a multisig wallet
@@ -147,7 +149,7 @@ Also this feature will change when BIP-0045 will be supported.
 ### Sign raw transactions
 
 ```sh
-vault write custodian/transaction/<wallet_name> multisig=<true|false> rawTx=<string>
+vault write custodian/transaction/<wallet_name> multisig=<true|false> rawTx=<string> token=<auth_token>
 ```
 
 This will create a signature for the passed raw transaction.  
