@@ -7,13 +7,13 @@ import (
 	"github.com/hashicorp/vault/logical"
 )
 
-func TestAddress(t *testing.T) {
+func TestMultiSigAddress(t *testing.T) {
 	b, storage := getTestBackend(t)
 
 	exp := MissingTokenError
 	_, err := b.HandleRequest(context.Background(), &logical.Request{
 		Storage:   storage,
-		Path:      "address/wallet1",
+		Path:      "address/multisig/wallet1",
 		Operation: logical.UpdateOperation,
 	})
 	if err == nil {
@@ -26,7 +26,7 @@ func TestAddress(t *testing.T) {
 	exp = InvalidTokenError
 	_, err = b.HandleRequest(context.Background(), &logical.Request{
 		Storage:   storage,
-		Path:      "address/wallet1",
+		Path:      "address/multisig/wallet1",
 		Operation: logical.UpdateOperation,
 		Data: map[string]interface{}{
 			"token": "testtoken",

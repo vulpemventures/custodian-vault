@@ -1,8 +1,8 @@
 package btc
 
 import (
-	"testing"
 	"context"
+	"testing"
 
 	"github.com/hashicorp/vault/logical"
 )
@@ -12,11 +12,11 @@ func TestWallet(t *testing.T) {
 
 	t.Run("Create wallet", func(t *testing.T) {
 		t.Parallel()
-		
-		exp := "missing network"
+
+		exp := MissingNetworkError
 		_, err := b.HandleRequest(context.Background(), &logical.Request{
-			Storage: storage,
-			Path: "wallet/testwallet",
+			Storage:   storage,
+			Path:      "wallet/testwallet",
 			Operation: logical.UpdateOperation,
 		})
 		if err == nil {
@@ -29,10 +29,10 @@ func TestWallet(t *testing.T) {
 
 	t.Run("Get extendend public key", func(t *testing.T) {
 		t.Parallel()
-		
+
 		resp, err := b.HandleRequest(context.Background(), &logical.Request{
-			Storage: storage,
-			Path: "wallet/wallet",
+			Storage:   storage,
+			Path:      "wallet/wallet",
 			Operation: logical.ReadOperation,
 		})
 

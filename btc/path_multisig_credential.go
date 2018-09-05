@@ -8,15 +8,9 @@ import (
 	"github.com/hashicorp/vault/logical/framework"
 )
 
-type credential struct {
-	WalletName string
-	LeaseID    string
-	Token      string
-}
-
-func pathCredentials(b *backend) *framework.Path {
+func pathMultiSigCredentials(b *backend) *framework.Path {
 	return &framework.Path{
-		Pattern: PathCreds + framework.GenericNameRegex("name"),
+		Pattern: PathMultiSigCreds + framework.GenericNameRegex("name"),
 		Fields: map[string]*framework.FieldSchema{
 			"name": &framework.FieldSchema{
 				Type:        framework.TypeString,
@@ -24,21 +18,23 @@ func pathCredentials(b *backend) *framework.Path {
 			},
 		},
 		Callbacks: map[logical.Operation]framework.OperationFunc{
-			logical.ReadOperation: b.pathCredsRead,
+			logical.ReadOperation: b.pathMultiSigCredsRead,
 		},
 
-		HelpSynopsis:    PathCredsHelpSyn,
-		HelpDescription: PathCredsHelpDesc,
+		HelpSynopsis:    PathMultiSigCredsHelpSyn,
+		HelpDescription: PathMultiSigCredsHelpDesc,
 	}
 }
 
-func (b *backend) pathCredsRead(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+func (b *backend) pathMultiSigCredsRead(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
 	walletName := d.Get("name").(string)
 	if walletName == "" {
 		return nil, errors.New(MissingWalletNameError)
 	}
 
-	w, err := b.GetWallet(ctx, req.Storage, walletName)
+	walletName = MultiSigPrefix + walletName
+
+	w, err := b.GetMultiSigWallet(ctx, req.Storage, walletName)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +53,7 @@ func (b *backend) pathCredsRead(ctx context.Context, req *logical.Request, d *fr
 		Token:      token,
 	}
 
-	entry, err := logical.StorageEntryJSON(PathCreds+leaseID, cred)
+	entry, err := logical.StorageEntryJSON(PathMultiSigCreds+leaseID, cred)
 	if err != nil {
 		return nil, err
 	}

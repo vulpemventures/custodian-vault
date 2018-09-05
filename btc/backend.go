@@ -11,6 +11,7 @@ type backend struct {
 	*framework.Backend
 }
 
+// Factory ..
 func Factory(ctx context.Context, c *logical.BackendConfig) (logical.Backend, error) {
 	b, err := Backend(c)
 	if err != nil {
@@ -24,31 +25,32 @@ func Factory(ctx context.Context, c *logical.BackendConfig) (logical.Backend, er
 	return b, nil
 }
 
+// Backend ..
 func Backend(c *logical.BackendConfig) (*backend, error) {
 	var b backend
 
 	b.Backend = &framework.Backend{
 		BackendType: logical.TypeLogical,
-		Help: backendHelp,
+		Help:        BackendHelp,
 		PathsSpecial: &logical.Paths{
 			LocalStorage: []string{
-				"secrets/",
+				PathSecrets,
 			},
 		},
 		Paths: []*framework.Path{
 			pathWallet(&b),
 			pathAddress(&b),
 			pathCredentials(&b),
+			pathTransaction(&b),
+			pathMultiSigCredentials(&b),
+			pathMultiSigWallet(&b),
+			pathMultiSigAddress(&b),
 		},
 		Secrets: []*framework.Secret{
 			secretCredentials(&b),
+			multisigSecretCredentials(&b),
 		},
 	}
 
 	return &b, nil
 }
-
-const backendHelp = `
-The bitcoin custodian plugin lets you to store your private keys securely.
-With this plugin you can create wallet private keys, generate receiving addresses and sign transactions.
-`
