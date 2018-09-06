@@ -10,16 +10,52 @@ import (
 func TestCredentials(t *testing.T) {
 	b, storage := getTestBackend(t)
 
-	exp := "Failed to create credentials for 'wallet1': wallet does not exist"
-	_, err := b.HandleRequest(context.Background(), &logical.Request{
-		Storage:   storage,
-		Path:      "creds/wallet1",
+	name := "test"
+	network := "testnet"
+	_, err := newWallet(t, b, storage, name, network)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Run("Create auth token for wallet", func(t *testing.T) {
+		t.Parallel()
+
+		resp, err := newAuthToken(t, b, storage, name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if resp == nil {
+			t.Fatal("No response received")
+		}
+	})
+
+	t.Run("Create auth token for bad wallet should fail", func(t *testing.T) {
+		t.Parallel()
+
+		name := "badwallet"
+		exp := "Failed to create credentials for '" + name + "': wallet does not exist"
+		_, err := newAuthToken(t, b, storage, name)
+		if err == nil {
+			t.Fatal("Should have failed before")
+		}
+		if err.Error() != exp {
+			t.Fatalf("Want: %v, got: %v", exp, err)
+		}
+	})
+}
+
+func newAuthToken(t *testing.T, b logical.Backend, store logical.Storage, name string) (*logical.Response, error) {
+	resp, err := b.HandleRequest(context.Background(), &logical.Request{
+		Path:      "creds/" + name,
+		Storage:   store,
 		Operation: logical.ReadOperation,
 	})
-	if err == nil {
-		t.Fatal("Should have failed before")
+	if err != nil {
+		return nil, err
 	}
-	if err.Error() != exp {
-		t.Fatalf("Want: %v, got: %v", exp, err)
+	if resp.IsError() {
+		return nil, resp.Error()
 	}
+
+	return resp, nil
 }
