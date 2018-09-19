@@ -9,7 +9,7 @@ import (
 )
 
 type address struct {
-	Childnum    uint32
+	Childnum    int
 	LastAddress string
 }
 
@@ -36,7 +36,6 @@ func pathAddress(b *backend) *framework.Path {
 }
 
 func (b *backend) pathAddressWrite(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
-	const isMultiSig = false
 	walletName := d.Get("name").(string)
 	if walletName == "" {
 		return nil, errors.New(MissingWalletNameError)
@@ -47,7 +46,7 @@ func (b *backend) pathAddressWrite(ctx context.Context, req *logical.Request, d 
 	}
 
 	// check if auth token is valid
-	token, err := b.GetToken(ctx, req.Storage, t, isMultiSig)
+	token, err := b.GetToken(ctx, req.Storage, t, StandardType)
 	if err != nil {
 		return nil, err
 	}
@@ -57,9 +56,12 @@ func (b *backend) pathAddressWrite(ctx context.Context, req *logical.Request, d 
 
 	// get wallet from storage
 	w, err := b.GetWallet(ctx, req.Storage, walletName)
+	if err != nil {
+		return nil, err
+	}
 
 	// get last address and address index from storage
-	childnum, err := b.GetLastUsedAddressIndex(ctx, req.Storage, walletName)
+	childnum, err := b.GetLastUsedAddressIndex(ctx, req.Storage, walletName, false)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +84,7 @@ func (b *backend) pathAddressWrite(ctx context.Context, req *logical.Request, d 
 	}
 
 	// revoke auth token
-	err = b.RevokeToken(ctx, req.Storage, token, isMultiSig)
+	err = b.RevokeToken(ctx, req.Storage, token, StandardType)
 	if err != nil {
 		return nil, err
 	}
@@ -95,10 +97,15 @@ func (b *backend) pathAddressWrite(ctx context.Context, req *logical.Request, d 
 }
 
 // retrieves last derived address from storage and returns its index
-func (b *backend) GetLastUsedAddressIndex(ctx context.Context, store logical.Storage, walletName string) (uint32, error) {
-	var childnum uint32
+func (b *backend) GetLastUsedAddressIndex(ctx context.Context, store logical.Storage, walletName string, isNativeSegwit bool) (int, error) {
+	childnum := -1
 
-	addressEntry, err := store.Get(ctx, PathAddress+walletName)
+	path := PathAddress
+	if isNativeSegwit {
+		path = PathSegWitAddress
+	}
+	path = path + walletName
+	addressEntry, err := store.Get(ctx, path)
 	if err != nil {
 		return 0, err
 	}
