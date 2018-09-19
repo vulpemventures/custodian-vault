@@ -36,7 +36,7 @@ func TestMultiSigCredentials(t *testing.T) {
 		t.Parallel()
 
 		name := "badwallet"
-		exp := "Failed to create credentials for '" + MultiSigPrefix + name + "': wallet does not exist"
+		exp := MultiSigWalletNotFoundError
 		_, err := newMultiSigAuthToken(t, b, storage, name)
 		if err == nil {
 			t.Fatal("Should have failed before")

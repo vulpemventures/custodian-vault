@@ -39,7 +39,7 @@ func (b *backend) pathMultiSigCredsRead(ctx context.Context, req *logical.Reques
 		return nil, err
 	}
 	if w == nil {
-		return nil, errors.New("Failed to create credentials for '" + walletName + "': wallet does not exist")
+		return nil, errors.New(MultiSigWalletNotFoundError)
 	}
 
 	token, leaseID, err := newToken(ctx, req.Storage, nil)

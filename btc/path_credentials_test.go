@@ -12,7 +12,7 @@ func TestCredentials(t *testing.T) {
 
 	name := "test"
 	network := "testnet"
-	_, err := newWallet(t, b, storage, name, network)
+	_, err := newWallet(t, b, storage, name, network, !segwitCompatible)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -33,7 +33,7 @@ func TestCredentials(t *testing.T) {
 		t.Parallel()
 
 		name := "badwallet"
-		exp := "Failed to create credentials for '" + name + "': wallet does not exist"
+		exp := WalletNotFoundError
 		_, err := newAuthToken(t, b, storage, name)
 		if err == nil {
 			t.Fatal("Should have failed before")

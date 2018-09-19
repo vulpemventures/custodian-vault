@@ -31,7 +31,6 @@ func pathMultiSigAddress(b *backend) *framework.Path {
 }
 
 func (b *backend) pathMultiSigAddressWrite(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
-	const isMultiSig = true
 	walletName := d.Get("name").(string)
 	if walletName == "" {
 		return nil, errors.New(MissingWalletNameError)
@@ -44,7 +43,7 @@ func (b *backend) pathMultiSigAddressWrite(ctx context.Context, req *logical.Req
 	walletName = MultiSigPrefix + walletName
 
 	// check if auth token is valid
-	token, err := b.GetToken(ctx, req.Storage, t, isMultiSig)
+	token, err := b.GetToken(ctx, req.Storage, t, MultiSigType)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +63,7 @@ func (b *backend) pathMultiSigAddressWrite(ctx context.Context, req *logical.Req
 	}
 
 	// revoke auth token
-	err = b.RevokeToken(ctx, req.Storage, token, isMultiSig)
+	err = b.RevokeToken(ctx, req.Storage, token, MultiSigType)
 	if err != nil {
 		return nil, err
 	}

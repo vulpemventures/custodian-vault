@@ -67,7 +67,7 @@ func TestMultiSigWallet(t *testing.T) {
 	t.Run("Create an existing multisig wallet should fail", func(t *testing.T) {
 		t.Parallel()
 
-		exp := "MultiSig wallet with name '" + MultiSigPrefix + name + "' already exists"
+		exp := MultiSigWalletAlreadyExistsError
 		_, err := newMultiSigWallet(t, b, storage, name, network, m, n, pubkeys)
 		if err == nil {
 			t.Fatal("Should have failed before")

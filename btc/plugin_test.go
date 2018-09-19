@@ -12,7 +12,7 @@ func TestPlugin(t *testing.T) {
 
 	t.Logf("Test Parameters\nWallet name: %s\nWallet network: %s\nRaw transaction: %s\n", name, network, rawTx)
 	// create new BIP44 wallet
-	resp, err := newWallet(t, b, storage, name, network)
+	resp, err := newWallet(t, b, storage, name, network, !segwitCompatible)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -67,7 +67,7 @@ func TestPlugin(t *testing.T) {
 	token = resp.Data["token"].(string)
 
 	// create signature for raw transaction
-	resp, err = newSignature(t, b, storage, name, rawTx, false, token)
+	resp, err = newSignature(t, b, storage, name, rawTx, "standard", token)
 	if err != nil {
 		t.Fatal(err)
 	}

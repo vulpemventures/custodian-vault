@@ -97,7 +97,7 @@ func (b *backend) pathMultiSigWalletWrite(ctx context.Context, req *logical.Requ
 		return nil, err
 	}
 	if w != nil {
-		return nil, errors.New("MultiSig wallet with name '" + walletName + "' already exists")
+		return nil, errors.New(MultiSigWalletAlreadyExistsError)
 	}
 
 	// create multisig wallet with params
@@ -107,7 +107,7 @@ func (b *backend) pathMultiSigWalletWrite(ctx context.Context, req *logical.Requ
 	}
 
 	// create storage entry
-	entry, err := logical.StorageEntryJSON("wallet/"+walletName, wallet)
+	entry, err := logical.StorageEntryJSON(PathWallet+walletName, wallet)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +144,7 @@ func (b *backend) pathMultiSigWalletRead(ctx context.Context, req *logical.Reque
 }
 
 func (b *backend) GetMultiSigWallet(ctx context.Context, store logical.Storage, walletName string) (*multiSigWallet, error) {
-	entry, err := store.Get(ctx, "wallet/"+walletName)
+	entry, err := store.Get(ctx, PathWallet+walletName)
 	if err != nil {
 		return nil, err
 	}

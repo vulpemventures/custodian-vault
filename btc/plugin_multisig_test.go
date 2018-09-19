@@ -72,7 +72,7 @@ func TestMultiSigPlugin(t *testing.T) {
 	token = resp.Data["token"].(string)
 
 	// create signature for raw transaction
-	resp, err = newSignature(t, b, storage, name, rawTx, true, token)
+	resp, err = newSignature(t, b, storage, name, rawTx, "multisig", token)
 	if err != nil {
 		t.Fatal(err)
 	}
