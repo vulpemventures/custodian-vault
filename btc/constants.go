@@ -1,10 +1,7 @@
 package btc
 
-// BackendHelp ..
-const BackendHelp = "The bitcoin custodian plugin lets you to store your private keys securely.\nWith this plugin you can create wallet or multisig wallet and generate receiving addresses or sign transactions."
-
-// PathSecrets ..
-const PathSecrets = "secrets/"
+// PathWallet ..
+const PathWallet = "wallet/"
 
 // PathAddress ..
 const PathAddress = "address/"
@@ -12,8 +9,11 @@ const PathAddress = "address/"
 // PathCreds ..
 const PathCreds = "creds/"
 
-// PathWallet ..
-const PathWallet = "wallet/"
+// PathSecrets ..
+const PathSecrets = "secrets/"
+
+// PathMultiSigWallet ..
+const PathMultiSigWallet = PathWallet + "multisig/"
 
 // PathMultiSigAddress ..
 const PathMultiSigAddress = PathAddress + "multisig/"
@@ -21,11 +21,20 @@ const PathMultiSigAddress = PathAddress + "multisig/"
 // PathMultiSigCreds ..
 const PathMultiSigCreds = PathCreds + "multisig/"
 
-// PathMultiSigWallet ..
-const PathMultiSigWallet = PathWallet + "multisig/"
+// PathSegWitWallet ..
+const PathSegWitWallet = PathWallet + "segwit/"
+
+// PathSegWitAddress ..
+const PathSegWitAddress = PathAddress + "segwit/"
+
+// PathSegWitCreds ..
+const PathSegWitCreds = PathCreds + "segwit/"
 
 // MultiSigPrefix ..
 const MultiSigPrefix = "multisig_"
+
+// SegWitPrefix ..
+const SegWitPrefix = "segwit_"
 
 // MissingTokenError ..
 const MissingTokenError = "Missing auth token"
@@ -51,6 +60,27 @@ const InvalidTokenError = "Invalid auth token"
 // InvalidNetworkError ..
 const InvalidNetworkError = "Invalid network"
 
+// InvalidModeError ..
+const InvalidModeError = "Invalid mode"
+
+// WalletNotFoundError ..
+const WalletNotFoundError = "Wallet not found"
+
+// MultiSigWalletNotFoundError ..
+const MultiSigWalletNotFoundError = "Multisig wallet not found"
+
+// SegWitWalletNotFoundError ..
+const SegWitWalletNotFoundError = "Native segwit wallet not found"
+
+// WalletAlreadyExistsError ..
+const WalletAlreadyExistsError = "BIP44 wallet with same name already exists"
+
+// MultiSigWalletAlreadyExistsError ..
+const MultiSigWalletAlreadyExistsError = "Multisig wallet with same name already exists"
+
+// SegWitWalletAlreadyExistsError ..
+const SegWitWalletAlreadyExistsError = "Native segwit wallet with same name already exists"
+
 // InvalidMError ..
 const InvalidMError = "Missing or invalid m param: it must be a positive number"
 
@@ -66,6 +96,12 @@ const NOutOfRangeError = "Invalid N param: it must be a value between 1 and 7 (i
 // MOutOfRangeError ..
 const MOutOfRangeError = "Invalid M param: it must be between 1 and N (inclusive)"
 
+// PathWalletsHelpSyn ..
+const PathWalletsHelpSyn = "Creates a new BIP44 wallet by specifying network and name"
+
+// PathWalletsHelpDesc ..
+const PathWalletsHelpDesc = ""
+
 // PathAddressHelpSyn ..
 const PathAddressHelpSyn = "Returns a new receiving address for selected wallet. You must provide an authentication token"
 
@@ -77,6 +113,12 @@ const PathCredsHelpSyn = "Creates authorization tokens for a wallet"
 
 // PathCredsHelpDesc ..
 const PathCredsHelpDesc = ""
+
+// PathMultiSigWalletsHelpSyn ..
+const PathMultiSigWalletsHelpSyn = "Creates a new wallet that is used as nth key of the m/n multisig wallet"
+
+// PathMultiSigWalletsHelpDesc ..
+const PathMultiSigWalletsHelpDesc = ""
 
 // PathMultiSigAddressHelpSyn ..
 const PathMultiSigAddressHelpSyn = "Returns the receiving address of the selected multisig wallet"
@@ -90,11 +132,23 @@ const PathMultiSigCredsHelpSyn = "Creates access tokens for a multisig wallet"
 // PathMultiSigCredsHelpDesc ..
 const PathMultiSigCredsHelpDesc = ""
 
-// PathMultiSigWalletsHelpSyn ..
-const PathMultiSigWalletsHelpSyn = "Creates a new wallet that is used as nth key of the m/n multisig wallet"
+// PathSegWitWalletsHelpSyn ..
+const PathSegWitWalletsHelpSyn = "Creates a new BIP84 wallet by specifying network and name"
 
-// PathMultiSigWalletsHelpDesc ..
-const PathMultiSigWalletsHelpDesc = ""
+// PathSegWitWalletsHelpDesc ..
+const PathSegWitWalletsHelpDesc = ""
+
+// PathSegWitAddressHelpSyn ..
+const PathSegWitAddressHelpSyn = "Returns a new receiving address for selected native segwit wallet. You must provide an authentication token"
+
+// PathSegWitAddressHelpDesc ..
+const PathSegWitAddressHelpDesc = ""
+
+// PathSegWitCredsHelpSyn ..
+const PathSegWitCredsHelpSyn = "Creates access tokens for a native segwit wallet"
+
+// PathSegWitCredsHelpDesc ..
+const PathSegWitCredsHelpDesc = ""
 
 // PathTransactionHelpSyn ..
 const PathTransactionHelpSyn = "Sign bitcoin raw transaction"
@@ -102,17 +156,26 @@ const PathTransactionHelpSyn = "Sign bitcoin raw transaction"
 // PathTransactionHelpDesc ..
 const PathTransactionHelpDesc = ""
 
-// PathWalletsHelpSyn ..
-const PathWalletsHelpSyn = "Creates a new bbip44 wallet by specifying network and name"
-
-// PathWalletsHelpDesc ..
-const PathWalletsHelpDesc = ""
+// BackendHelp ..
+const BackendHelp = "The bitcoin custodian plugin lets you to store your private keys securely.\nWith this plugin you can create wallet or multisig wallet and generate receiving addresses or sign transactions."
 
 // SecretCredsType ..
 const SecretCredsType = "creds"
 
 // MultiSigSecretCredsType ..
-const MultiSigSecretCredsType = "multisig_creds"
+const MultiSigSecretCredsType = "multisig_" + SecretCredsType
+
+// SegWitSecretCredsType ..
+const SegWitSecretCredsType = "segwit_" + SecretCredsType
+
+// StandardType ..
+const StandardType = 0
+
+// MultiSigType ..
+const MultiSigType = 1
+
+// SegWitType ..
+const SegWitType = 2
 
 // EntropyBitSize ..
 const EntropyBitSize = 256
@@ -129,6 +192,12 @@ const TestNet = "testnet"
 // Purpose ..
 const Purpose = HardenedKeyStart + 44
 
+// SegwitPurpose ..
+const SegwitPurpose = HardenedKeyStart + 49
+
+// NativeSegwitPurpose ..
+const NativeSegwitPurpose = HardenedKeyStart + 84
+
 // CoinTypeMainNet ..
 const CoinTypeMainNet = HardenedKeyStart
 
@@ -139,7 +208,7 @@ const CoinTypeTestNet = HardenedKeyStart + 1
 const Account = HardenedKeyStart
 
 // Change ..
-const Change = HardenedKeyStart
+const Change = 0
 
 // MultiSigDefaultAddressIndex ..
 const MultiSigDefaultAddressIndex = 0
