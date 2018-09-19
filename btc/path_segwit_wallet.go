@@ -8,16 +8,9 @@ import (
 	"github.com/hashicorp/vault/logical/framework"
 )
 
-type wallet struct {
-	Network        string
-	Mnemonic       string
-	DerivationPath []uint32
-	Segwit         bool
-}
-
-func pathWallet(b *backend) *framework.Path {
+func pathSegWitWallet(b *backend) *framework.Path {
 	return &framework.Path{
-		Pattern: PathWallet + framework.GenericNameRegex("name"),
+		Pattern: PathSegWitWallet + framework.GenericNameRegex("name"),
 		Fields: map[string]*framework.FieldSchema{
 			"network": &framework.FieldSchema{
 				Type:        framework.TypeString,
@@ -27,23 +20,18 @@ func pathWallet(b *backend) *framework.Path {
 				Type:        framework.TypeString,
 				Description: "wallet name",
 			},
-			"segwit": &framework.FieldSchema{
-				Type:        framework.TypeBool,
-				Description: "bip49 segwit backward compatible wallet",
-				Default:     false,
-			},
 		},
 		Callbacks: map[logical.Operation]framework.OperationFunc{
-			logical.ReadOperation:   b.pathWalletRead,
-			logical.UpdateOperation: b.pathWalletWrite,
+			logical.ReadOperation:   b.pathSegWitWalletRead,
+			logical.UpdateOperation: b.pathSegWitWalletWrite,
 		},
 
-		HelpSynopsis:    PathWalletsHelpSyn,
-		HelpDescription: PathWalletsHelpDesc,
+		HelpSynopsis:    PathSegWitWalletsHelpSyn,
+		HelpDescription: PathSegWitWalletsHelpDesc,
 	}
 }
 
-func (b *backend) pathWalletWrite(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+func (b *backend) pathSegWitWalletWrite(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
 	network := d.Get("network").(string)
 	if network == "" {
 		return nil, errors.New(MissingNetworkError)
@@ -56,20 +44,19 @@ func (b *backend) pathWalletWrite(ctx context.Context, req *logical.Request, d *
 	if walletName == "" {
 		return nil, errors.New(MissingWalletNameError)
 	}
-
-	segwit := d.Get("segwit").(bool)
+	walletName = SegWitPrefix + walletName
 
 	// return error if a wallet with same name has already been created
-	w, err := b.GetWallet(ctx, req.Storage, walletName)
+	w, err := b.GetSegWitWallet(ctx, req.Storage, walletName)
 	if err != nil {
 		return nil, err
 	}
 	if w != nil {
-		return nil, errors.New(WalletAlreadyExistsError)
+		return nil, errors.New(SegWitWalletAlreadyExistsError)
 	}
 
 	// create a new wallet
-	wallet, err := createWallet(network, segwit)
+	wallet, err := createSegWitWallet(network)
 	if err != nil {
 		return nil, err
 	}
@@ -92,11 +79,12 @@ func (b *backend) pathWalletWrite(ctx context.Context, req *logical.Request, d *
 	}, nil
 }
 
-func (b *backend) pathWalletRead(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+func (b *backend) pathSegWitWalletRead(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
 	walletName := d.Get("name").(string)
+	walletName = SegWitPrefix + walletName
 
 	// get wallet from storage
-	w, err := b.GetWallet(ctx, req.Storage, walletName)
+	w, err := b.GetSegWitWallet(ctx, req.Storage, walletName)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +100,7 @@ func (b *backend) pathWalletRead(ctx context.Context, req *logical.Request, d *f
 		return nil, err
 	}
 
-	// first derive private key at path m/44'/0'/0'/0
+	// first derive private key at path m/84'/0'/0'/0 (mainnet)
 	xprv, err := derivePrivKey(key, w.DerivationPath)
 	if err != nil {
 		return nil, err
@@ -133,7 +121,7 @@ func (b *backend) pathWalletRead(ctx context.Context, req *logical.Request, d *f
 }
 
 // Retrieves a wallet in storage given the wallet name
-func (b *backend) GetWallet(ctx context.Context, store logical.Storage, walletName string) (*wallet, error) {
+func (b *backend) GetSegWitWallet(ctx context.Context, store logical.Storage, walletName string) (*wallet, error) {
 	entry, err := store.Get(ctx, PathWallet+walletName)
 	if err != nil {
 		return nil, err

@@ -23,10 +23,10 @@ func pathTransaction(b *backend) *framework.Path {
 				Type:        framework.TypeString,
 				Description: "Raw transaction to be signed",
 			},
-			"multisig": &framework.FieldSchema{
-				Type:        framework.TypeBool,
-				Description: "Multisig transaction",
-				Default:     false,
+			"mode": &framework.FieldSchema{
+				Type:        framework.TypeString,
+				Description: "Transaction type: standard | multisig | segwit ",
+				Default:     "standard",
 			},
 			"token": &framework.FieldSchema{
 				Type:        framework.TypeString,
@@ -47,17 +47,26 @@ func (b *backend) pathTransactionWrite(ctx context.Context, req *logical.Request
 	if walletName == "" {
 		return nil, errors.New(MissingWalletNameError)
 	}
-	multisig := d.Get("multisig").(bool)
-	if multisig {
-		walletName = MultiSigPrefix + walletName
+	mode := d.Get("mode").(string)
+	walletType, err := parseMode(mode)
+	if err != nil {
+		return nil, err
 	}
+
+	switch walletType {
+	case MultiSigType:
+		walletName = MultiSigPrefix + walletName
+	case SegWitType:
+		walletName = SegWitPrefix + walletName
+	}
+
 	t := d.Get("token").(string)
 	if t == "" {
 		return nil, errors.New(MissingTokenError)
 	}
 
 	// check if auth token is valid
-	token, err := b.GetToken(ctx, req.Storage, t, multisig)
+	token, err := b.GetToken(ctx, req.Storage, t, walletType)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +79,7 @@ func (b *backend) pathTransactionWrite(ctx context.Context, req *logical.Request
 		return nil, err
 	}
 	if w == nil {
-		return nil, errors.New("Wallet " + walletName + " not found")
+		return nil, errors.New(WalletNotFoundError)
 	}
 
 	rawTx := d.Get("rawTx").(string)
@@ -86,12 +95,12 @@ func (b *backend) pathTransactionWrite(ctx context.Context, req *logical.Request
 	}
 
 	// derive key of last used address (for multisig is 0)
-	childnum, err := b.GetLastUsedAddressIndex(ctx, req.Storage, walletName)
+	childnum, err := b.GetLastUsedAddressIndex(ctx, req.Storage, walletName, walletType == SegWitType)
 	if err != nil {
 		return nil, err
 	}
 
-	derivedPrivKey, err := derivePrivKey(masterKey, append(w.DerivationPath, childnum))
+	derivedPrivKey, err := derivePrivKey(masterKey, append(w.DerivationPath, uint32(childnum)))
 	privateKey, err := derivedPrivKey.ECPrivKey()
 	if err != nil {
 		return nil, err
@@ -114,7 +123,7 @@ func (b *backend) pathTransactionWrite(ctx context.Context, req *logical.Request
 	signature := hex.EncodeToString(signatureBytes.Serialize())
 
 	// revoke auth token
-	err = b.RevokeToken(ctx, req.Storage, token, multisig)
+	err = b.RevokeToken(ctx, req.Storage, token, walletType)
 	if err != nil {
 		return nil, err
 	}
@@ -124,4 +133,17 @@ func (b *backend) pathTransactionWrite(ctx context.Context, req *logical.Request
 			"signature": signature,
 		},
 	}, nil
+}
+
+func parseMode(s string) (int, error) {
+	switch s {
+	case "standard":
+		return StandardType, nil
+	case "multisig":
+		return MultiSigType, nil
+	case "segwit":
+		return SegWitType, nil
+	default:
+		return -1, errors.New(InvalidModeError)
+	}
 }

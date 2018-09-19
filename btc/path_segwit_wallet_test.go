@@ -7,30 +7,13 @@ import (
 	"github.com/hashicorp/vault/logical"
 )
 
-const segwitCompatible = true
-
-func TestWallet(t *testing.T) {
+func TestSegWitWallet(t *testing.T) {
 	b, storage := getTestBackend(t)
 	name := "test"
 	network := "testnet"
 
-	t.Run("New BIP44 wallet", func(t *testing.T) {
-		resp, err := newWallet(t, b, storage, name, network, !segwitCompatible)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if resp == nil {
-			t.Fatal("No response received")
-		}
-
-		t.Log("Mnemonic:", resp.Data["mnemonic"].(string))
-	})
-
-	t.Run("New BIP49 wallet", func(t *testing.T) {
-		t.Parallel()
-
-		name := "segwitTest"
-		resp, err := newWallet(t, b, storage, name, network, segwitCompatible)
+	t.Run("New BIP84 wallet", func(t *testing.T) {
+		resp, err := newSegWitWallet(t, b, storage, name, network)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -44,7 +27,7 @@ func TestWallet(t *testing.T) {
 	t.Run("Get wallet info", func(t *testing.T) {
 		t.Parallel()
 
-		resp, err := getWallet(t, b, storage, name)
+		resp, err := getSegWitWallet(t, b, storage, name)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -61,7 +44,7 @@ func TestWallet(t *testing.T) {
 		name := "testwallet"
 		network := ""
 		exp := MissingNetworkError
-		_, err := newWallet(t, b, storage, name, network, !segwitCompatible)
+		_, err := newSegWitWallet(t, b, storage, name, network)
 		if err == nil {
 			t.Fatal("Should have failed before")
 		}
@@ -76,7 +59,7 @@ func TestWallet(t *testing.T) {
 		name := "testwallet"
 		network := "invaildnetwork"
 		exp := InvalidNetworkError
-		_, err := newWallet(t, b, storage, name, network, !segwitCompatible)
+		_, err := newSegWitWallet(t, b, storage, name, network)
 		if err == nil {
 			t.Fatal("Should have failed before")
 		}
@@ -88,8 +71,8 @@ func TestWallet(t *testing.T) {
 	t.Run("Create an existing wallet should fail", func(t *testing.T) {
 		t.Parallel()
 
-		exp := WalletAlreadyExistsError
-		_, err := newWallet(t, b, storage, name, network, !segwitCompatible)
+		exp := SegWitWalletAlreadyExistsError
+		_, err := newSegWitWallet(t, b, storage, name, network)
 		if err == nil {
 			t.Fatal("Should have failed before")
 		}
@@ -99,11 +82,11 @@ func TestWallet(t *testing.T) {
 	})
 }
 
-func newWallet(t *testing.T, b logical.Backend, store logical.Storage, name string, network string, segwit bool) (*logical.Response, error) {
-	data := map[string]interface{}{"network": network, "segwit": segwit}
+func newSegWitWallet(t *testing.T, b logical.Backend, store logical.Storage, name string, network string) (*logical.Response, error) {
+	data := map[string]interface{}{"network": network}
 	resp, err := b.HandleRequest(context.Background(), &logical.Request{
 		Storage:   store,
-		Path:      "wallet/" + name,
+		Path:      PathSegWitWallet + name,
 		Operation: logical.UpdateOperation,
 		Data:      data,
 	})
@@ -117,10 +100,10 @@ func newWallet(t *testing.T, b logical.Backend, store logical.Storage, name stri
 	return resp, nil
 }
 
-func getWallet(t *testing.T, b logical.Backend, store logical.Storage, name string) (*logical.Response, error) {
+func getSegWitWallet(t *testing.T, b logical.Backend, store logical.Storage, name string) (*logical.Response, error) {
 	resp, err := b.HandleRequest(context.Background(), &logical.Request{
 		Storage:   store,
-		Path:      "wallet/" + name,
+		Path:      PathSegWitWallet + name,
 		Operation: logical.ReadOperation,
 	})
 	if err != nil {
