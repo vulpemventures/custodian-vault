@@ -58,5 +58,8 @@ vault write sys/plugins/catalog/$PLUGIN_NAME \
 echo "    Mouting plugin"
 vault secrets enable -path=$MNT_PATH -plugin-name=$PLUGIN_NAME plugin
 
+echo "    Mounting 2fa plugin"
+vault secrets enable totp
+
 echo "==> Ready!"
 wait $!
