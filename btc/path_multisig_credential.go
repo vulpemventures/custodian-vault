@@ -32,8 +32,6 @@ func (b *backend) pathMultiSigCredsRead(ctx context.Context, req *logical.Reques
 		return nil, errors.New(MissingWalletNameError)
 	}
 
-	walletName = MultiSigPrefix + walletName
-
 	w, err := b.GetMultiSigWallet(ctx, req.Storage, walletName)
 	if err != nil {
 		return nil, err

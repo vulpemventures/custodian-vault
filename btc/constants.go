@@ -30,12 +30,6 @@ const PathSegWitAddress = PathAddress + "segwit/"
 // PathSegWitCreds ..
 const PathSegWitCreds = PathCreds + "segwit/"
 
-// MultiSigPrefix ..
-const MultiSigPrefix = "multisig_"
-
-// SegWitPrefix ..
-const SegWitPrefix = "segwit_"
-
 // MissingTokenError ..
 const MissingTokenError = "Missing auth token"
 
@@ -95,6 +89,9 @@ const NOutOfRangeError = "Invalid N param: it must be a value between 1 and 7 (i
 
 // MOutOfRangeError ..
 const MOutOfRangeError = "Invalid M param: it must be between 1 and N (inclusive)"
+
+// UnknownWalletTypeError ..
+const UnknownWalletTypeError = "Unknown wallet type"
 
 // PathWalletsHelpSyn ..
 const PathWalletsHelpSyn = "Creates a new BIP44 wallet by specifying network and name"

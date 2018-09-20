@@ -149,3 +149,21 @@ func (b *backend) GetWallet(ctx context.Context, store logical.Storage, walletNa
 
 	return &w, nil
 }
+
+func getWalletByType(ctx context.Context, b *backend, store logical.Storage, walletName string, walletType int) (*wallet, error) {
+	switch walletType {
+	case StandardType:
+		return b.GetWallet(ctx, store, walletName)
+	case SegWitType:
+		return b.GetSegWitWallet(ctx, store, walletName)
+	case MultiSigType:
+		ms, err := b.GetMultiSigWallet(ctx, store, walletName)
+		if err != nil {
+			return nil, err
+		}
+
+		return ms.wallet, nil
+	default:
+		return nil, errors.New(UnknownWalletTypeError)
+	}
+}

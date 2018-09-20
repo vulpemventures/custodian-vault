@@ -44,7 +44,6 @@ func (b *backend) pathSegWitWalletWrite(ctx context.Context, req *logical.Reques
 	if walletName == "" {
 		return nil, errors.New(MissingWalletNameError)
 	}
-	walletName = SegWitPrefix + walletName
 
 	// return error if a wallet with same name has already been created
 	w, err := b.GetSegWitWallet(ctx, req.Storage, walletName)
@@ -62,7 +61,7 @@ func (b *backend) pathSegWitWalletWrite(ctx context.Context, req *logical.Reques
 	}
 
 	// create storage entry
-	entry, err := logical.StorageEntryJSON(PathWallet+walletName, wallet)
+	entry, err := logical.StorageEntryJSON(PathSegWitWallet+walletName, wallet)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +80,6 @@ func (b *backend) pathSegWitWalletWrite(ctx context.Context, req *logical.Reques
 
 func (b *backend) pathSegWitWalletRead(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
 	walletName := d.Get("name").(string)
-	walletName = SegWitPrefix + walletName
 
 	// get wallet from storage
 	w, err := b.GetSegWitWallet(ctx, req.Storage, walletName)
@@ -122,7 +120,7 @@ func (b *backend) pathSegWitWalletRead(ctx context.Context, req *logical.Request
 
 // Retrieves a wallet in storage given the wallet name
 func (b *backend) GetSegWitWallet(ctx context.Context, store logical.Storage, walletName string) (*wallet, error) {
-	entry, err := store.Get(ctx, PathWallet+walletName)
+	entry, err := store.Get(ctx, PathSegWitWallet+walletName)
 	if err != nil {
 		return nil, err
 	}

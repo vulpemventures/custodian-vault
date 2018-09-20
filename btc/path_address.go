@@ -61,7 +61,8 @@ func (b *backend) pathAddressWrite(ctx context.Context, req *logical.Request, d 
 	}
 
 	// get last address and address index from storage
-	childnum, err := b.GetLastUsedAddressIndex(ctx, req.Storage, walletName, false)
+	storePath := PathAddress + walletName
+	childnum, err := b.GetLastUsedAddressIndex(ctx, req.Storage, storePath)
 	if err != nil {
 		return nil, err
 	}
@@ -97,14 +98,8 @@ func (b *backend) pathAddressWrite(ctx context.Context, req *logical.Request, d 
 }
 
 // retrieves last derived address from storage and returns its index
-func (b *backend) GetLastUsedAddressIndex(ctx context.Context, store logical.Storage, walletName string, isNativeSegwit bool) (int, error) {
+func (b *backend) GetLastUsedAddressIndex(ctx context.Context, store logical.Storage, path string) (int, error) {
 	childnum := -1
-
-	path := PathAddress
-	if isNativeSegwit {
-		path = PathSegWitAddress
-	}
-	path = path + walletName
 	addressEntry, err := store.Get(ctx, path)
 	if err != nil {
 		return 0, err

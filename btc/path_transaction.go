@@ -53,13 +53,6 @@ func (b *backend) pathTransactionWrite(ctx context.Context, req *logical.Request
 		return nil, err
 	}
 
-	switch walletType {
-	case MultiSigType:
-		walletName = MultiSigPrefix + walletName
-	case SegWitType:
-		walletName = SegWitPrefix + walletName
-	}
-
 	t := d.Get("token").(string)
 	if t == "" {
 		return nil, errors.New(MissingTokenError)
@@ -74,7 +67,7 @@ func (b *backend) pathTransactionWrite(ctx context.Context, req *logical.Request
 		return nil, errors.New(InvalidTokenError)
 	}
 
-	w, err := b.GetWallet(ctx, req.Storage, walletName)
+	w, err := getWalletByType(ctx, b, req.Storage, walletName, walletType)
 	if err != nil {
 		return nil, err
 	}
@@ -94,8 +87,13 @@ func (b *backend) pathTransactionWrite(ctx context.Context, req *logical.Request
 		return nil, err
 	}
 
+	storePath := PathAddress
+	if walletType == SegWitType {
+		storePath = PathSegWitAddress
+	}
+	storePath += walletName
 	// derive key of last used address (for multisig is 0)
-	childnum, err := b.GetLastUsedAddressIndex(ctx, req.Storage, walletName, walletType == SegWitType)
+	childnum, err := b.GetLastUsedAddressIndex(ctx, req.Storage, storePath)
 	if err != nil {
 		return nil, err
 	}

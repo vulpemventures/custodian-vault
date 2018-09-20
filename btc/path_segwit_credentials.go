@@ -32,8 +32,6 @@ func (b *backend) pathSegWitCredsRead(ctx context.Context, req *logical.Request,
 		return nil, errors.New(MissingWalletNameError)
 	}
 
-	walletName = SegWitPrefix + walletName
-
 	w, err := b.GetSegWitWallet(ctx, req.Storage, walletName)
 	if err != nil {
 		return nil, err

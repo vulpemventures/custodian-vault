@@ -98,13 +98,11 @@ func createMultiSigWallet(network string, pubkeys []string, m int, n int) (*mult
 	}
 
 	wallet := &multiSigWallet{
-		Mnemonic:       w.Mnemonic,
-		Network:        w.Network,
-		DerivationPath: w.DerivationPath,
-		PublicKeys:     pubkeys,
-		RedeemScript:   redeemScript,
-		M:              m,
-		N:              n,
+		wallet:       w,
+		PublicKeys:   pubkeys,
+		RedeemScript: redeemScript,
+		M:            m,
+		N:            n,
 	}
 
 	return wallet, nil

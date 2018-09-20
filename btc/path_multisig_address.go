@@ -39,8 +39,6 @@ func (b *backend) pathMultiSigAddressWrite(ctx context.Context, req *logical.Req
 	if t == "" {
 		return nil, errors.New(MissingTokenError)
 	}
-	// add prefix for multisig wallet
-	walletName = MultiSigPrefix + walletName
 
 	// check if auth token is valid
 	token, err := b.GetToken(ctx, req.Storage, t, MultiSigType)

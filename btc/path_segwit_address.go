@@ -39,8 +39,6 @@ func (b *backend) pathSegWitAddressWrite(ctx context.Context, req *logical.Reque
 	if t == "" {
 		return nil, errors.New(MissingTokenError)
 	}
-	// add prefix for segwit wallet
-	walletName = SegWitPrefix + walletName
 
 	// check if auth token is valid
 	token, err := b.GetToken(ctx, req.Storage, t, SegWitType)
@@ -56,7 +54,8 @@ func (b *backend) pathSegWitAddressWrite(ctx context.Context, req *logical.Reque
 		return nil, err
 	}
 
-	childnum, err := b.GetLastUsedAddressIndex(ctx, req.Storage, walletName, true)
+	storePath := PathSegWitAddress + walletName
+	childnum, err := b.GetLastUsedAddressIndex(ctx, req.Storage, storePath)
 	if err != nil {
 		return nil, err
 	}
