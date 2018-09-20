@@ -198,11 +198,11 @@ const SegwitPurpose = HardenedKeyStart + 49
 // NativeSegwitPurpose ..
 const NativeSegwitPurpose = HardenedKeyStart + 84
 
-// CoinTypeMainNet ..
-const CoinTypeMainNet = HardenedKeyStart
-
-// CoinTypeTestNet ..
-const CoinTypeTestNet = HardenedKeyStart + 1
+// CoinType ..
+var CoinType = map[string]uint32{
+	MainNet: HardenedKeyStart,
+	TestNet: HardenedKeyStart + 1,
+}
 
 // Account ..
 const Account = HardenedKeyStart

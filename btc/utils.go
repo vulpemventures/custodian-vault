@@ -40,11 +40,7 @@ func createWallet(network string, segwit bool) (*wallet, error) {
 		purpose = SegwitPurpose
 	}
 
-	coinType := CoinTypeMainNet
-	if network == TestNet {
-		coinType = CoinTypeTestNet
-	}
-	path := []uint32{purpose, coinType, Account, Change}
+	path := []uint32{purpose, CoinType[network], Account, Change}
 
 	wallet := &wallet{
 		Mnemonic:       mnemonic,
@@ -126,11 +122,7 @@ func createSegWitWallet(network string) (*wallet, error) {
 		return nil, err
 	}
 
-	coinType := CoinTypeMainNet
-	if network == TestNet {
-		coinType = CoinTypeTestNet
-	}
-	path := []uint32{NativeSegwitPurpose, coinType, Account, Change}
+	path := []uint32{NativeSegwitPurpose, CoinType[network], Account, Change}
 
 	wallet := &wallet{
 		Mnemonic:       mnemonic,
