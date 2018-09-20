@@ -179,7 +179,21 @@ func deriveAddress(w *wallet, childnum int) (*address, error) {
 		return nil, err
 	}
 
-	addr, err := getWalletAddress(key, net, w.Segwit)
+	// addr, err := getWalletAddress(key, net, w.Segwit)
+	addr := ""
+	if w.Segwit {
+		addr, err = bip49Address(key, net)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// generate new address for derived key
+		rawAddress, err := key.Address(net)
+		if err != nil {
+			return nil, err
+		}
+		addr = rawAddress.String()
+	}
 
 	return &address{
 		Childnum:    childnum,
@@ -307,33 +321,21 @@ func getMultiSigAddress(redeemScript string, network string) (string, error) {
 	return address.String(), nil
 }
 
-func getWalletAddress(key *hdkeychain.ExtendedKey, net *chaincfg.Params, isSegwit bool) (string, error) {
-	addr := ""
-
-	if isSegwit {
-		pubkey, err := key.ECPubKey()
-		if err != nil {
-			return "", err
-		}
-		keyHash := btcutil.Hash160(pubkey.SerializeCompressed())
-		// scriptSig for P2SHP2WPKH (version 0) is <0 <20-byte-key-hash>> as stated in BIP141
-		scriptSig, err := txscript.NewScriptBuilder().AddOp(txscript.OP_0).AddData(keyHash[:20]).Script()
-		if err != nil {
-			return "", err
-		}
-		rawAddress, err := btcutil.NewAddressScriptHash(scriptSig, net)
-		if err != nil {
-			return "", err
-		}
-		addr = rawAddress.String()
-	} else {
-		// generate new address for derived key
-		rawAddress, err := key.Address(net)
-		if err != nil {
-			return "", err
-		}
-		addr = rawAddress.String()
+func bip49Address(key *hdkeychain.ExtendedKey, net *chaincfg.Params) (string, error) {
+	pubkey, err := key.ECPubKey()
+	if err != nil {
+		return "", err
+	}
+	keyHash := btcutil.Hash160(pubkey.SerializeCompressed())
+	// scriptSig for P2SHP2WPKH (version 0) is <0 <20-byte-key-hash>> as stated in BIP141
+	scriptSig, err := txscript.NewScriptBuilder().AddOp(txscript.OP_0).AddData(keyHash[:20]).Script()
+	if err != nil {
+		return "", err
+	}
+	rawAddress, err := btcutil.NewAddressScriptHash(scriptSig, net)
+	if err != nil {
+		return "", err
 	}
 
-	return addr, nil
+	return rawAddress.String(), nil
 }
