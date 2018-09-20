@@ -181,30 +181,7 @@ func deriveAddress(w *wallet, childnum int) (*address, error) {
 		return nil, err
 	}
 
-	addr := ""
-	if w.Segwit {
-		pubkey, err := key.ECPubKey()
-		if err != nil {
-			return nil, err
-		}
-		keyHash := btcutil.Hash160(pubkey.SerializeCompressed())
-		scriptSig, err := txscript.NewScriptBuilder().AddOp(txscript.OP_0).AddData(keyHash).Script()
-		if err != nil {
-			return nil, err
-		}
-		rawAddress, err := btcutil.NewAddressScriptHash(scriptSig, net)
-		if err != nil {
-			return nil, err
-		}
-		addr = rawAddress.String()
-	} else {
-		// generate new address for derived key
-		rawAddress, err := key.Address(net)
-		if err != nil {
-			return nil, err
-		}
-		addr = rawAddress.String()
-	}
+	addr, err := getWalletAddress(key, net, w.Segwit)
 
 	return &address{
 		Childnum:    childnum,
@@ -239,6 +216,7 @@ func deriveSegWitAddress(w *wallet, childnum int) (*address, error) {
 	}
 
 	witnessProgram := btcutil.Hash160(pubkey.SerializeCompressed())
+	// version 0 of P2wPKH requires first 20 bytes of witness program
 	addr, err := btcutil.NewAddressWitnessPubKeyHash(witnessProgram[:20], net)
 	if err != nil {
 		return nil, err
@@ -329,4 +307,35 @@ func getMultiSigAddress(redeemScript string, network string) (string, error) {
 	}
 
 	return address.String(), nil
+}
+
+func getWalletAddress(key *hdkeychain.ExtendedKey, net *chaincfg.Params, isSegwit bool) (string, error) {
+	addr := ""
+
+	if isSegwit {
+		pubkey, err := key.ECPubKey()
+		if err != nil {
+			return "", err
+		}
+		keyHash := btcutil.Hash160(pubkey.SerializeCompressed())
+		// scriptSig for P2SHP2WPKH (version 0) is <0 <20-byte-key-hash>> as stated in BIP141
+		scriptSig, err := txscript.NewScriptBuilder().AddOp(txscript.OP_0).AddData(keyHash[:20]).Script()
+		if err != nil {
+			return "", err
+		}
+		rawAddress, err := btcutil.NewAddressScriptHash(scriptSig, net)
+		if err != nil {
+			return "", err
+		}
+		addr = rawAddress.String()
+	} else {
+		// generate new address for derived key
+		rawAddress, err := key.Address(net)
+		if err != nil {
+			return "", err
+		}
+		addr = rawAddress.String()
+	}
+
+	return addr, nil
 }
