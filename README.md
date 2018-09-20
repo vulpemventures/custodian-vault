@@ -145,7 +145,7 @@ vault read custodian/creds/multisig/<wallet_name>
 ### Generate an `auth_token` for a native segwit wallet
 
 ```sh
-vault reas custodian/creds/segwit/<wallet_name>
+vault read custodian/creds/segwit/<wallet_name>
 # Same response object as above
 ```
 
