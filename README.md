@@ -44,7 +44,7 @@ Vault is installed at path `$HOME/vault`.
 ./scripts/macos_go_installer.sh
 
 # Install Vault
-./scripts/macos_vault_installer.sh
+./scripts/vault_installer.sh
 ```
 
 Go is installed via [Homebrew](https://brew.sh/?utm_source=devmag.io) at path `GOROOT=/usr/local/opt/go/libexec` and env var `GOPATH=$HOME/go` is exported. First install Homebrew if you have not already done so.  
