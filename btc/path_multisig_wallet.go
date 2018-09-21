@@ -2,6 +2,7 @@ package btc
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 
 	"github.com/hashicorp/vault/logical"
@@ -9,13 +10,11 @@ import (
 )
 
 type multiSigWallet struct {
-	Network        string
-	Mnemonic       string
-	DerivationPath []uint32
-	M              int
-	N              int
-	RedeemScript   string
-	PublicKeys     []string
+	*wallet
+	M            int
+	N            int
+	RedeemScript string
+	PublicKeys   []string
 }
 
 func pathMultiSigWallet(b *backend) *framework.Path {
@@ -91,13 +90,12 @@ func (b *backend) pathMultiSigWalletWrite(ctx context.Context, req *logical.Requ
 	}
 
 	// return error if a wallet with same name has already been created
-	walletName = MultiSigPrefix + walletName
 	w, err := b.GetMultiSigWallet(ctx, req.Storage, walletName)
 	if err != nil {
 		return nil, err
 	}
 	if w != nil {
-		return nil, errors.New("MultiSig wallet with name '" + walletName + "' already exists")
+		return nil, errors.New(MultiSigWalletAlreadyExistsError)
 	}
 
 	// create multisig wallet with params
@@ -107,7 +105,7 @@ func (b *backend) pathMultiSigWalletWrite(ctx context.Context, req *logical.Requ
 	}
 
 	// create storage entry
-	entry, err := logical.StorageEntryJSON("wallet/"+walletName, wallet)
+	entry, err := logical.StorageEntryJSON(PathMultiSigWallet+walletName, wallet)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +120,6 @@ func (b *backend) pathMultiSigWalletWrite(ctx context.Context, req *logical.Requ
 
 func (b *backend) pathMultiSigWalletRead(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
 	walletName := d.Get("name").(string)
-	walletName = MultiSigPrefix + walletName
 
 	// get wallet from storage
 	w, err := b.GetMultiSigWallet(ctx, req.Storage, walletName)
@@ -144,7 +141,7 @@ func (b *backend) pathMultiSigWalletRead(ctx context.Context, req *logical.Reque
 }
 
 func (b *backend) GetMultiSigWallet(ctx context.Context, store logical.Storage, walletName string) (*multiSigWallet, error) {
-	entry, err := store.Get(ctx, "wallet/"+walletName)
+	entry, err := store.Get(ctx, PathMultiSigWallet+walletName)
 	if err != nil {
 		return nil, err
 	}
@@ -152,10 +149,54 @@ func (b *backend) GetMultiSigWallet(ctx context.Context, store logical.Storage, 
 		return nil, nil
 	}
 
-	var w multiSigWallet
-	if err := entry.DecodeJSON(&w); err != nil {
+	var raw map[string]interface{}
+	if err := entry.DecodeJSON(&raw); err != nil {
 		return nil, err
 	}
 
-	return &w, nil
+	return toMultiSig(raw)
+}
+
+func toMultiSig(raw map[string]interface{}) (*multiSigWallet, error) {
+	// converting storage response to multiSig type sucks a lot!!
+	// - DerivationPath is []interface{} so we need to scan the array and convert each element to uint32
+	// 	- since each element is a json.Number, convertion is: json.Number -> int64 -> uint32
+	// - M,N: json.Number -> int64 -> int
+	// - PubKeys is also a []interface{} but []interface{} -> []string is quite smooth
+	rawPath := raw["DerivationPath"].([]interface{})
+	path := make([]uint32, len(rawPath))
+	for i := range rawPath {
+		t, err := rawPath[i].(json.Number).Int64()
+		if err != nil {
+			return nil, err
+		}
+		path[i] = uint32(t)
+	}
+	m, err := raw["M"].(json.Number).Int64()
+	if err != nil {
+		return nil, err
+	}
+	n, err := raw["N"].(json.Number).Int64()
+	if err != nil {
+		return nil, err
+	}
+	rawPubkeys := raw["PublicKeys"].([]interface{})
+	pubkeys := make([]string, len(rawPubkeys))
+	for i := range rawPubkeys {
+		pubkeys[i] = rawPubkeys[i].(string)
+	}
+
+	mw := &multiSigWallet{
+		RedeemScript: raw["RedeemScript"].(string),
+		PublicKeys:   pubkeys,
+		M:            int(m),
+		N:            int(n),
+	}
+	mw.wallet = &wallet{
+		Mnemonic:       raw["Mnemonic"].(string),
+		Network:        raw["Network"].(string),
+		DerivationPath: path,
+	}
+
+	return mw, nil
 }

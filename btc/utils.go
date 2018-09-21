@@ -18,7 +18,7 @@ func seedFromMnemonic(mnemonic string) []byte {
 	return bip39.NewSeed(mnemonic, "")
 }
 
-func createWallet(network string) (*wallet, error) {
+func createWallet(network string, segwit bool) (*wallet, error) {
 	// generate entropy for mnemonic
 	entropy, err := bip39.NewEntropy(EntropyBitSize)
 	if err != nil {
@@ -30,21 +30,23 @@ func createWallet(network string) (*wallet, error) {
 		return nil, err
 	}
 
-	// derivation path hard coded to m/44'/0'/0'/0 for mainnet
-	// and m/44'/1'/0'/0 for testnet as specified in BIP44
-	// support for BIP49 will be added later
-	// hardened key derivation starts at index 2147483648 (hex 0x80000000)
-	var path []uint32
-	if network == MainNet {
-		path = []uint32{Purpose, CoinTypeMainNet, Account, Change}
+	// derivation path is:
+	// * m/44'/0'/0'/0 for mainnet BIP44 wallet
+	// * m/44'/1'/0'/0 for testnet BIP44 wallet
+	// * m/49'/0'/0'/0 for mainnet BIP49 wallet
+	// * m/49'/1'/0'/0 for testnet BIP49 wallet
+	purpose := Purpose
+	if segwit {
+		purpose = SegwitPurpose
 	}
-	if network == TestNet {
-		path = []uint32{Purpose, CoinTypeTestNet, Account, Change}
-	}
+
+	path := []uint32{purpose, CoinType[network], Account, Change}
+
 	wallet := &wallet{
 		Mnemonic:       mnemonic,
 		Network:        network,
 		DerivationPath: path,
+		Segwit:         segwit,
 	}
 
 	return wallet, nil
@@ -52,7 +54,7 @@ func createWallet(network string) (*wallet, error) {
 
 func createMultiSigWallet(network string, pubkeys []string, m int, n int) (*multiSigWallet, error) {
 	// first create a standard wallet
-	w, err := createWallet(network)
+	w, err := createWallet(network, false)
 	if err != nil {
 		return nil, err
 	}
@@ -96,13 +98,34 @@ func createMultiSigWallet(network string, pubkeys []string, m int, n int) (*mult
 	}
 
 	wallet := &multiSigWallet{
-		Mnemonic:       w.Mnemonic,
-		Network:        w.Network,
-		DerivationPath: w.DerivationPath,
-		PublicKeys:     pubkeys,
-		RedeemScript:   redeemScript,
-		M:              m,
-		N:              n,
+		wallet:       w,
+		PublicKeys:   pubkeys,
+		RedeemScript: redeemScript,
+		M:            m,
+		N:            n,
+	}
+
+	return wallet, nil
+}
+
+func createSegWitWallet(network string) (*wallet, error) {
+	// generate entropy for mnemonic
+	entropy, err := bip39.NewEntropy(EntropyBitSize)
+	if err != nil {
+		return nil, err
+	}
+	// generate mnemonic
+	mnemonic, err := bip39.NewMnemonic(entropy)
+	if err != nil {
+		return nil, err
+	}
+
+	path := []uint32{NativeSegwitPurpose, CoinType[network], Account, Change}
+
+	wallet := &wallet{
+		Mnemonic:       mnemonic,
+		Network:        network,
+		DerivationPath: path,
 	}
 
 	return wallet, nil
@@ -135,7 +158,7 @@ func derivePubKey(key *hdkeychain.ExtendedKey) (*hdkeychain.ExtendedKey, error) 
 }
 
 // derive address for wallet `w` at path m/44'/0'/0'/0/childnum
-func deriveAddress(w *wallet, childnum uint32) (*address, error) {
+func deriveAddress(w *wallet, childnum int) (*address, error) {
 	net, err := getNetworkFromString(w.Network)
 	if err != nil {
 		return nil, err
@@ -150,14 +173,63 @@ func deriveAddress(w *wallet, childnum uint32) (*address, error) {
 	}
 
 	// append childnum to derivation path and derive private key
-	path := append(w.DerivationPath, childnum)
+	path := append(w.DerivationPath, uint32(childnum))
 	key, err = derivePrivKey(key, path)
 	if err != nil {
 		return nil, err
 	}
 
-	// generate new address for derived key
-	addr, err := key.Address(net)
+	// addr, err := getWalletAddress(key, net, w.Segwit)
+	addr := ""
+	if w.Segwit {
+		addr, err = bip49Address(key, net)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// generate new address for derived key
+		rawAddress, err := key.Address(net)
+		if err != nil {
+			return nil, err
+		}
+		addr = rawAddress.String()
+	}
+
+	return &address{
+		Childnum:    childnum,
+		LastAddress: addr,
+	}, nil
+}
+
+func deriveSegWitAddress(w *wallet, childnum int) (*address, error) {
+	net, err := getNetworkFromString(w.Network)
+	if err != nil {
+		return nil, err
+	}
+
+	seed := seedFromMnemonic(w.Mnemonic)
+
+	// master key
+	key, err := hdkeychain.NewMaster(seed, net)
+	if err != nil {
+		return nil, err
+	}
+
+	// append childnum to derivation path and derive private key
+	path := append(w.DerivationPath, uint32(childnum))
+	key, err = derivePrivKey(key, path)
+	if err != nil {
+		return nil, err
+	}
+
+	pubkey, err := key.ECPubKey()
+	if err != nil {
+		return nil, err
+	}
+
+	witnessProgram := btcutil.Hash160(pubkey.SerializeCompressed())
+	// version 0 of P2wPKH requires first 20 bytes of witness program
+	addr, err := btcutil.NewAddressWitnessPubKeyHash(witnessProgram[:20], net)
 	if err != nil {
 		return nil, err
 	}
@@ -247,4 +319,23 @@ func getMultiSigAddress(redeemScript string, network string) (string, error) {
 	}
 
 	return address.String(), nil
+}
+
+func bip49Address(key *hdkeychain.ExtendedKey, net *chaincfg.Params) (string, error) {
+	pubkey, err := key.ECPubKey()
+	if err != nil {
+		return "", err
+	}
+	keyHash := btcutil.Hash160(pubkey.SerializeCompressed())
+	// scriptSig for P2SHP2WPKH (version 0) is <0 <20-byte-key-hash>> as stated in BIP141
+	scriptSig, err := txscript.NewScriptBuilder().AddOp(txscript.OP_0).AddData(keyHash[:20]).Script()
+	if err != nil {
+		return "", err
+	}
+	rawAddress, err := btcutil.NewAddressScriptHash(scriptSig, net)
+	if err != nil {
+		return "", err
+	}
+
+	return rawAddress.String(), nil
 }

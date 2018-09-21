@@ -8,14 +8,9 @@ import (
 	"github.com/hashicorp/vault/logical/framework"
 )
 
-type address struct {
-	Childnum    int
-	LastAddress string
-}
-
-func pathAddress(b *backend) *framework.Path {
+func pathSegWitAddress(b *backend) *framework.Path {
 	return &framework.Path{
-		Pattern: PathAddress + framework.GenericNameRegex("name"),
+		Pattern: PathSegWitAddress + framework.GenericNameRegex("name"),
 		Fields: map[string]*framework.FieldSchema{
 			"name": &framework.FieldSchema{
 				Type:        framework.TypeString,
@@ -27,15 +22,15 @@ func pathAddress(b *backend) *framework.Path {
 			},
 		},
 		Callbacks: map[logical.Operation]framework.OperationFunc{
-			logical.UpdateOperation: b.pathAddressWrite,
+			logical.UpdateOperation: b.pathSegWitAddressWrite,
 		},
 
-		HelpSynopsis:    PathAddressHelpSyn,
-		HelpDescription: PathAddressHelpDesc,
+		HelpSynopsis:    PathSegWitAddressHelpSyn,
+		HelpDescription: PathSegWitAddressHelpDesc,
 	}
 }
 
-func (b *backend) pathAddressWrite(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+func (b *backend) pathSegWitAddressWrite(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
 	walletName := d.Get("name").(string)
 	if walletName == "" {
 		return nil, errors.New(MissingWalletNameError)
@@ -46,7 +41,7 @@ func (b *backend) pathAddressWrite(ctx context.Context, req *logical.Request, d 
 	}
 
 	// check if auth token is valid
-	token, err := b.GetToken(ctx, req.Storage, t, StandardType)
+	token, err := b.GetToken(ctx, req.Storage, t, SegWitType)
 	if err != nil {
 		return nil, err
 	}
@@ -54,14 +49,12 @@ func (b *backend) pathAddressWrite(ctx context.Context, req *logical.Request, d 
 		return nil, errors.New(InvalidTokenError)
 	}
 
-	// get wallet from storage
-	w, err := b.GetWallet(ctx, req.Storage, walletName)
+	w, err := b.GetSegWitWallet(ctx, req.Storage, walletName)
 	if err != nil {
 		return nil, err
 	}
 
-	// get last address and address index from storage
-	storePath := PathAddress + walletName
+	storePath := PathSegWitAddress + walletName
 	childnum, err := b.GetLastUsedAddressIndex(ctx, req.Storage, storePath)
 	if err != nil {
 		return nil, err
@@ -69,13 +62,13 @@ func (b *backend) pathAddressWrite(ctx context.Context, req *logical.Request, d 
 
 	// increment childnum to derive next address
 	childnum = childnum + 1
-	a, err := deriveAddress(w, childnum)
+	a, err := deriveSegWitAddress(w, childnum)
 	if err != nil {
 		return nil, err
 	}
 
 	// override the storage with new generated address
-	entry, err := logical.StorageEntryJSON(PathAddress+walletName, a)
+	entry, err := logical.StorageEntryJSON(PathSegWitAddress+walletName, a)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +78,7 @@ func (b *backend) pathAddressWrite(ctx context.Context, req *logical.Request, d 
 	}
 
 	// revoke auth token
-	err = b.RevokeToken(ctx, req.Storage, token, StandardType)
+	err = b.RevokeToken(ctx, req.Storage, token, SegWitType)
 	if err != nil {
 		return nil, err
 	}
@@ -95,22 +88,4 @@ func (b *backend) pathAddressWrite(ctx context.Context, req *logical.Request, d 
 			"address": a.LastAddress,
 		},
 	}, nil
-}
-
-// retrieves last derived address from storage and returns its index
-func (b *backend) GetLastUsedAddressIndex(ctx context.Context, store logical.Storage, path string) (int, error) {
-	childnum := -1
-	addressEntry, err := store.Get(ctx, path)
-	if err != nil {
-		return 0, err
-	}
-	if addressEntry != nil {
-		var a address
-		if err := addressEntry.DecodeJSON(&a); err != nil {
-			return 0, err
-		}
-		childnum = a.Childnum
-	}
-
-	return childnum, nil
 }

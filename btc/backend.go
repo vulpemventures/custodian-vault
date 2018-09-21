@@ -45,10 +45,14 @@ func Backend(c *logical.BackendConfig) (*backend, error) {
 			pathMultiSigCredentials(&b),
 			pathMultiSigWallet(&b),
 			pathMultiSigAddress(&b),
+			pathSegWitWallet(&b),
+			pathSegWitAddress(&b),
+			pathSegWitCredentials(&b),
 		},
 		Secrets: []*framework.Secret{
 			secretCredentials(&b),
 			multisigSecretCredentials(&b),
+			segwitSecretCredentials(&b),
 		},
 	}
 

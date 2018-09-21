@@ -58,7 +58,7 @@ func newToken(ctx context.Context, s logical.Storage, config *salt.Config) (stri
 	return token, newSalt.SaltID(token), nil
 }
 
-func (b *backend) GetToken(ctx context.Context, s logical.Storage, token string, multisig bool) (*credential, error) {
+func (b *backend) GetToken(ctx context.Context, s logical.Storage, token string, walletType int) (*credential, error) {
 	newSalt, err := salt.NewSalt(ctx, s, nil)
 	if err != nil {
 		return nil, err
@@ -66,10 +66,16 @@ func (b *backend) GetToken(ctx context.Context, s logical.Storage, token string,
 
 	leaseID := newSalt.SaltID(token)
 
-	path := PathCreds
-	if multisig {
+	var path string
+	switch walletType {
+	case StandardType:
+		path = PathCreds
+	case MultiSigType:
 		path = PathMultiSigCreds
+	case SegWitType:
+		path = PathSegWitCreds
 	}
+
 	path = path + leaseID
 
 	entry, err := s.Get(ctx, path)
@@ -88,11 +94,17 @@ func (b *backend) GetToken(ctx context.Context, s logical.Storage, token string,
 	return &cred, nil
 }
 
-func (b *backend) RevokeToken(ctx context.Context, store logical.Storage, token *credential, multisig bool) error {
-	secretType := SecretCredsType
-	if multisig {
+func (b *backend) RevokeToken(ctx context.Context, store logical.Storage, token *credential, walletType int) error {
+	var secretType string
+	switch walletType {
+	case StandardType:
+		secretType = SecretCredsType
+	case MultiSigType:
 		secretType = MultiSigSecretCredsType
+	case SegWitType:
+		secretType = SegWitSecretCredsType
 	}
+
 	secret := b.Secret(secretType)
 	request := &logical.Request{
 		Storage:   store,

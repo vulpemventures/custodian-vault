@@ -85,6 +85,14 @@ It returns a response object that contains:
 * `network` either bitcoin main net or test net
 * extended public key at path `m/44'/0'/0'/0` for main net, that is the master key from which all receiving address are generated (see [BIP-0032](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) for more details).
 
+### Create a BIP49 wallet
+
+```sh
+vault write custodian/wallet/<name> network=<testnet|mainnet> segwit=true
+```
+
+Again, this creates a mnemonic visible only at creation time, but derivation path is set to `m/49'/0'/0'/0` (for mainnet). This kind of wallet is used for segwit backward compatibility.
+
 ### Create multisig wallet
 
 ```sh
@@ -98,6 +106,13 @@ To get the `redeem script` along with the other info:
 ```sh
 vault read custodian/wallet/multisig/<name>
 ```
+
+### Create a BIP84 wallet (native segwit)
+
+```sh
+vault write custodian/wallet/segwit/<name> network=<mainnet|testnet>
+```
+This creates a native segwit wallet.
 
 ### Generate an `auth_token` for a wallet
 
@@ -127,14 +142,20 @@ vault read custodian/creds/multisig/<wallet_name>
 # Same response object as above
 ```
 
+### Generate an `auth_token` for a native segwit wallet
+
+```sh
+vault read custodian/creds/segwit/<wallet_name>
+# Same response object as above
+```
+
 ### Derive a new receiving address for a wallet
 
 ```sh
 vault write custodian/address/<wallet_name> token=<auth_token>
 ```
 
-This derives new addresses from public keys at path `m/44'/0'/0'/0/<childnum>` for main net (`m/44'/1'/0'/0/<childnum>` for test net) starting from `childnum = 0`.
-You need to pass a valid `auth_token` to get a new address or the request will fail.
+This derives new P2PKH addresses for BIP44 wallet and P2WPKH nested in P2SH for BIP49 wallet.
 
 ### Get receiving address for a multisig wallet
 
@@ -146,14 +167,22 @@ This returns the receiving address of a previous created multisig.
 The address won't change since it's the `base58check` encode of the hash of the `redeem script`.  
 Also this feature will change when BIP-0045 will be supported.
 
+### Derive a new receiving address for native segwit wallet
+
+```sh
+vault write custodian/address/segwit/<wallet_name> token=<auth_token>
+```
+
+This derives new P2WPKH addresses in `Bech32` format.
+
 ### Sign raw transactions
 
 ```sh
-vault write custodian/transaction/<wallet_name> multisig=<true|false> rawTx=<string> token=<auth_token>
+vault write custodian/transaction/<wallet_name> mode=<standard|multisig|segwit> rawTx=<string> token=<auth_token>
 ```
 
 This will create a signature for the passed raw transaction.  
-You need to specify if the wallet is a multisig, this flag is set to `false` by default.
+You need to specify if the wallet is a multisig, native segwit or standard (either BIP44 and BIP49) type, this flag is set to `standard` by default.
 The produced signature is deterministic, which means that the same message and the same key yield the same signature, and canonical in accordance with [RFC6979](https://tools.ietf.org/html/rfc6979) and [BIP-0062](https://github.com/bitcoin/bips/blob/master/bip-0062.mediawiki) respectively.
 
 ## Tests

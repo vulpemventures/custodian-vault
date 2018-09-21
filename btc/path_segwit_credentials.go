@@ -8,9 +8,9 @@ import (
 	"github.com/hashicorp/vault/logical/framework"
 )
 
-func pathMultiSigCredentials(b *backend) *framework.Path {
+func pathSegWitCredentials(b *backend) *framework.Path {
 	return &framework.Path{
-		Pattern: PathMultiSigCreds + framework.GenericNameRegex("name"),
+		Pattern: PathSegWitCreds + framework.GenericNameRegex("name"),
 		Fields: map[string]*framework.FieldSchema{
 			"name": &framework.FieldSchema{
 				Type:        framework.TypeString,
@@ -18,26 +18,26 @@ func pathMultiSigCredentials(b *backend) *framework.Path {
 			},
 		},
 		Callbacks: map[logical.Operation]framework.OperationFunc{
-			logical.ReadOperation: b.pathMultiSigCredsRead,
+			logical.ReadOperation: b.pathSegWitCredsRead,
 		},
 
-		HelpSynopsis:    PathMultiSigCredsHelpSyn,
-		HelpDescription: PathMultiSigCredsHelpDesc,
+		HelpSynopsis:    PathSegWitCredsHelpSyn,
+		HelpDescription: PathSegWitCredsHelpDesc,
 	}
 }
 
-func (b *backend) pathMultiSigCredsRead(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
+func (b *backend) pathSegWitCredsRead(ctx context.Context, req *logical.Request, d *framework.FieldData) (*logical.Response, error) {
 	walletName := d.Get("name").(string)
 	if walletName == "" {
 		return nil, errors.New(MissingWalletNameError)
 	}
 
-	w, err := b.GetMultiSigWallet(ctx, req.Storage, walletName)
+	w, err := b.GetSegWitWallet(ctx, req.Storage, walletName)
 	if err != nil {
 		return nil, err
 	}
 	if w == nil {
-		return nil, errors.New(MultiSigWalletNotFoundError)
+		return nil, errors.New(SegWitWalletNotFoundError)
 	}
 
 	token, leaseID, err := newToken(ctx, req.Storage, nil)
@@ -51,7 +51,7 @@ func (b *backend) pathMultiSigCredsRead(ctx context.Context, req *logical.Reques
 		Token:      token,
 	}
 
-	entry, err := logical.StorageEntryJSON(PathMultiSigCreds+leaseID, cred)
+	entry, err := logical.StorageEntryJSON(PathSegWitCreds+leaseID, cred)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func (b *backend) pathMultiSigCredsRead(ctx context.Context, req *logical.Reques
 		return nil, err
 	}
 
-	resp := b.Secret(SecretCredsType).Response(
+	resp := b.Secret(SegWitSecretCredsType).Response(
 		map[string]interface{}{"token": token},
 		map[string]interface{}{"token": token},
 	)
