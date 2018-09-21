@@ -24,4 +24,6 @@ echo "Extracting files.."
 unzip $TARGET -d $HOME/vault
 rm -rf $TARGET
 echo "export PATH=\$PATH:$HOME/vault" >> $HOME/.bash_profile
+echo "export VAULT_ADDR=http://localhost:8200" >> $HOME/.bash_profile
+
 echo -e "Installation complete\nVault installed at path: $HOME/vault"

@@ -26,7 +26,7 @@ sudo apt-get update
 sudo apt-get install unzip
 
 echo "Downloading archive.."
-wget https://releases.hashicorp.com/vault/0.10.3/$TARGET
+wget https://releases.hashicorp.com/vault/0.11.1/$TARGET
 
 rm -rf $HOME/vault
 mkdir -p $HOME/vault

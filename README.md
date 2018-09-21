@@ -15,6 +15,7 @@ At the moment only bitcoin is supported.
 
 * [Golang](https://golang.org/)
 * [Vault](https://www.vaultproject.io/)
+* [Homebrew (Mac OS X)](https://brew.sh/?utm_source=devmag.io)
 
 If you have already installed them on your machine, skip this step.
 
@@ -24,12 +25,33 @@ Clone the project
 git clone https://github.com/vulpemventures/custodian-vault.git && cd custodian-vault
 ```
 
-Run `./scripts/go_installer.sh` to install Go. It will be installed at `/usr/local/go` and will export environment variable `GOPATH=$HOME/go`.  
-Run `./scripts/vault_installer.sh` to install Vault. It will be installed at `$HOME/vault`.
+### Linux
 
-NOTICE: These scripts are intended to install packages only into Linux systems.
+```sh
+# Install Golang
+./scripts/go_installer.sh
 
-Delete these folders to uninstall the packages.  
+# Install Vault
+./scripts/vault_installer.sh
+```
+
+Go is installed at path `/usr/local/go` and environment variable `GOPATH=$HOME/go` is exported.  
+Vault is installed at path `$HOME/vault`.
+
+### Mac OS x
+
+```sh
+# Install Golang
+./scripts/macos_go_installer.sh
+
+# Install Vault
+./scripts/macos_vault_installer.sh
+```
+
+Go is installed via Homebrew at path `GOROOT=/usr/local/opt/go/libexec` and env var `GOPATH=$HOME/go` is exported.  
+Vault is installed at path `$HOME/vault`.
+
+Delete `GOROOT` and `~/vault` folders to uninstall the packages.  
 
 ## Installation
 

@@ -12,4 +12,4 @@ echo "export GOROOT=/usr/local/opt/go/libexec"
 echo "export PATH=$PATH:$GOPATH/bin"
 echo "export PATH=$PATH:$GOROOT/bin"
 
-echo -e "Installation complete\nGo installed at path: /usr/local/go\nWorkspace set at GOPATH=$GOPATH"
+echo -e "Installation complete\nGo installed at path: $GOROOT\nWorkspace set at GOPATH=$GOPATH"
