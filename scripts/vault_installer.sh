@@ -1,6 +1,22 @@
 #!/bin/bash
+OS=`uname -s`
+TARGET="vault_0.11.1_"
+case "$OS" in
+  "Darwin")
+    BASHRC=".bash_profile"
+    TARGET=$TARGET"darwin_"
+    ;;
+  "Linux")
+    BASHRC=".profile"
+    TARGET=$TARGET"linux_"
+    ;;
+  *)
+    echo "Unsupported OS"
+    exit 1
+    ;;
+esac
+
 ARCH=`uname -m`
-TARGET="vault_0.10.3_linux_"
 case "$ARCH" in
   "x86")
     TARGET=$TARGET"386"
@@ -21,17 +37,22 @@ case "$ARCH" in
 esac
 TARGET=$TARGET".zip"
 
-echo "Installing unzip.."
-sudo apt-get update
-sudo apt-get install unzip
+if [$OS -eq "Darwin"]
+then
+  echo "Installing unzip.."
+  sudo apt-get update
+  sudo apt-get install unzip
+fi
 
 echo "Downloading archive.."
-wget https://releases.hashicorp.com/vault/0.10.3/$TARGET
+curl -O https://releases.hashicorp.com/vault/0.11.1/$TARGET
 
 rm -rf $HOME/vault
 mkdir -p $HOME/vault
 echo "Extracting files.."
 unzip $TARGET -d $HOME/vault
 rm -rf $TARGET
-echo "export PATH=\$PATH:$HOME/vault" >> $HOME/.profile
+echo "export PATH=\$PATH:$HOME/vault" >> $HOME/$BASHRC
+echo "export VAULT_ADDR=http://localhost:8200" >> $HOME/$BASHRC
+
 echo -e "Installation complete\nVault installed at path: $HOME/vault"

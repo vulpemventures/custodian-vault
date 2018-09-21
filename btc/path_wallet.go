@@ -21,7 +21,7 @@ func pathWallet(b *backend) *framework.Path {
 		Fields: map[string]*framework.FieldSchema{
 			"network": &framework.FieldSchema{
 				Type:        framework.TypeString,
-				Description: "btc network type: mainnet | testnet",
+				Description: "btc network type: mainnet | testnet | regtest",
 			},
 			"name": &framework.FieldSchema{
 				Type:        framework.TypeString,
@@ -48,7 +48,7 @@ func (b *backend) pathWalletWrite(ctx context.Context, req *logical.Request, d *
 	if network == "" {
 		return nil, errors.New(MissingNetworkError)
 	}
-	if network != "testnet" && network != "mainnet" {
+	if network != MainNet && network != TestNet && network != RegTest {
 		return nil, errors.New(InvalidNetworkError)
 	}
 

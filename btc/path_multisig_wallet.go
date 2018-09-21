@@ -23,7 +23,7 @@ func pathMultiSigWallet(b *backend) *framework.Path {
 		Fields: map[string]*framework.FieldSchema{
 			"network": &framework.FieldSchema{
 				Type:        framework.TypeString,
-				Description: "Btc network type: mainnet | testnet",
+				Description: "Btc network type: mainnet | testnet | regtest",
 			},
 			"name": &framework.FieldSchema{
 				Type:        framework.TypeString,
@@ -56,6 +56,9 @@ func (b *backend) pathMultiSigWalletWrite(ctx context.Context, req *logical.Requ
 	network := d.Get("network").(string)
 	if network == "" {
 		return nil, errors.New(MissingNetworkError)
+	}
+	if network != MainNet && network != TestNet && network != RegTest {
+		return nil, errors.New(InvalidNetworkError)
 	}
 
 	walletName := d.Get("name").(string)
