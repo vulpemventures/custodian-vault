@@ -186,6 +186,9 @@ const MainNet = "mainnet"
 // TestNet ..
 const TestNet = "testnet"
 
+// RegTest ..
+const RegTest = "regtest"
+
 // Purpose ..
 const Purpose = HardenedKeyStart + 44
 
@@ -199,6 +202,7 @@ const NativeSegwitPurpose = HardenedKeyStart + 84
 var CoinType = map[string]uint32{
 	MainNet: HardenedKeyStart,
 	TestNet: HardenedKeyStart + 1,
+	RegTest: HardenedKeyStart + 1,
 }
 
 // Account ..

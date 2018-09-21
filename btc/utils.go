@@ -246,6 +246,8 @@ func getNetworkFromString(network string) (*chaincfg.Params, error) {
 		return &chaincfg.MainNetParams, nil
 	case TestNet:
 		return &chaincfg.TestNet3Params, nil
+	case RegTest:
+		return &chaincfg.RegressionNetParams, nil
 	default:
 		return nil, errors.New(InvalidNetworkError)
 	}

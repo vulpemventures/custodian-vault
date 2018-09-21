@@ -68,7 +68,7 @@ This starts Vault in dev mode, in order to let you test the features of the cust
 ### Create a BIP44 wallet
 
 ```sh
-vault write custodian/wallet/<name> network=<testnet|mainnet>
+vault write custodian/wallet/<name> network=<mainnet|testnet|regtest>
 ```
 
 This creates a random mnemonic that's returned in the response object. It is used to generate the seed as stated in [BIP-0039](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki).  
@@ -88,7 +88,7 @@ It returns a response object that contains:
 ### Create a BIP49 wallet
 
 ```sh
-vault write custodian/wallet/<name> network=<testnet|mainnet> segwit=true
+vault write custodian/wallet/<name> network=<mainnet|testnet|regtest> segwit=true
 ```
 
 Again, this creates a mnemonic visible only at creation time, but derivation path is set to `m/49'/0'/0'/0` (for mainnet). This kind of wallet is used for segwit backward compatibility.
@@ -96,7 +96,7 @@ Again, this creates a mnemonic visible only at creation time, but derivation pat
 ### Create multisig wallet
 
 ```sh
-vault write custodian/wallet/multisig/<name> m=<number> n=<number> pubkeys=<list,of,pubkeys> network=<testnet|mainnet>
+vault write custodian/wallet/multisig/<name> m=<number> n=<number> pubkeys=<list,of,pubkeys> network=<mainnet|testnet|regtest>
 ```
 
 This creates a new key used in an `m` of `n` multisg wallet. It requires a list of `n-1` comma separated public keys that are used to create the `redeem script`. This will be subject of breaking changes, since it's planned to add support for [BIP-0045](https://github.com/bitcoin/bips/blob/master/bip-0045.mediawiki).
@@ -110,7 +110,7 @@ vault read custodian/wallet/multisig/<name>
 ### Create a BIP84 wallet (native segwit)
 
 ```sh
-vault write custodian/wallet/segwit/<name> network=<mainnet|testnet>
+vault write custodian/wallet/segwit/<name> network=<mainnet|testnet|regtest>
 ```
 This creates a native segwit wallet.
 
