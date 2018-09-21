@@ -15,7 +15,6 @@ At the moment only bitcoin is supported.
 
 * [Golang](https://golang.org/)
 * [Vault](https://www.vaultproject.io/)
-* [Homebrew (Mac OS X)](https://brew.sh/?utm_source=devmag.io)
 
 If you have already installed them on your machine, skip this step.
 
@@ -48,8 +47,8 @@ Vault is installed at path `$HOME/vault`.
 ./scripts/macos_vault_installer.sh
 ```
 
-Go is installed via Homebrew at path `GOROOT=/usr/local/opt/go/libexec` and env var `GOPATH=$HOME/go` is exported.  
-Vault is installed at path `$HOME/vault`.
+Go is installed via [Homebrew](https://brew.sh/?utm_source=devmag.io) at path `GOROOT=/usr/local/opt/go/libexec` and env var `GOPATH=$HOME/go` is exported. First install Homebrew if you have not already done so.  
+Vault is installed at path `$HOME/vault`.  
 
 Delete `GOROOT` and `~/vault` folders to uninstall the packages.  
 
